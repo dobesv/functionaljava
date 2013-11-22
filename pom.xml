@@ -31,6 +31,17 @@
     <name>Functional Java</name>
     <url>http://functionaljava.org/</url>
   </organization>
+  <repository>
+      <id>repo</id>
+      <releases>
+          <enabled>true</enabled>
+          <checksumPolicy>ignore</checksumPolicy>
+      </releases>
+      <snapshots>
+          <enabled>false</enabled>
+      </snapshots>
+      <url>${project.baseUri}repo</url>
+  </repository>  
   <build>
     <plugins>
       <plugin>

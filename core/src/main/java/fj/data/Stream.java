@@ -1,32 +1,14 @@
 package fj.data;
 
-import fj.Effect;
-import fj.Equal;
-import fj.F;
-import fj.F2;
-import fj.F3;
-import fj.Function;
-import fj.Monoid;
-import fj.Ord;
-import fj.P;
-import fj.P1;
-import fj.P2;
-import fj.Unit;
-import fj.control.parallel.Promise;
-import fj.control.parallel.Strategy;
-import fj.Ordering;
-
-import java.util.AbstractCollection;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-
 import static fj.Bottom.error;
 import static fj.Function.compose;
 import static fj.Function.constant;
 import static fj.Function.curry;
 import static fj.Function.flip;
 import static fj.Function.identity;
+import static fj.Ordering.EQ;
+import static fj.Ordering.GT;
+import static fj.Ordering.LT;
 import static fj.P.p;
 import static fj.P.p2;
 import static fj.Unit.unit;
@@ -35,9 +17,27 @@ import static fj.data.Array.mkArray;
 import static fj.data.Option.none;
 import static fj.data.Option.some;
 import static fj.function.Booleans.not;
-import static fj.Ordering.EQ;
-import static fj.Ordering.GT;
-import static fj.Ordering.LT;
+
+import java.util.AbstractCollection;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+import fj.Effect;
+import fj.Equal;
+import fj.F;
+import fj.F2;
+import fj.F3;
+import fj.Function;
+import fj.Monoid;
+import fj.Ord;
+import fj.Ordering;
+import fj.P;
+import fj.P1;
+import fj.P2;
+import fj.Unit;
+import fj.control.parallel.Promise;
+import fj.control.parallel.Strategy;
 
 /**
  * A lazy (not yet evaluated), immutable, singly linked list.
@@ -54,6 +54,7 @@ public abstract class Stream<A> implements Iterable<A> {
    *
    * @return A iterator for this stream.
    */
+  @Override
   public final Iterator<A> iterator() {
     return toCollection().iterator();
   }
@@ -110,6 +111,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final <B> B foldRight(final F<A, F<P1<B>, B>> f, final B b) {
     return isEmpty() ? b : f.f(head()).f(new P1<B>() {
+      @Override
       public B _1() {
         return tail()._1().foldRight(f, b);
       }
@@ -228,12 +230,14 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final Stream<A> intersperse(final A a) {
     return isEmpty() ? this : cons(head(), new P1<Stream<A>>() {
+      @Override
       public Stream<A> _1() {
         return prefix(a, tail()._1());
       }
 
       public Stream<A> prefix(final A x, final Stream<A> xs) {
         return xs.isEmpty() ? xs : cons(x, p(cons(xs.head(), new P1<Stream<A>>() {
+          @Override
           public Stream<A> _1() {
             return prefix(a, xs.tail()._1());
           }
@@ -250,6 +254,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final <B> Stream<B> map(final F<A, B> f) {
     return isEmpty() ? Stream.<B>nil() : cons(f.f(head()), new P1<Stream<B>>() {
+      @Override
       public Stream<B> _1() {
         return tail()._1().map(f);
       }
@@ -263,8 +268,10 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A, B> F<F<A, B>, F<Stream<A>, Stream<B>>> map_() {
     return new F<F<A, B>, F<Stream<A>, Stream<B>>>() {
+      @Override
       public F<Stream<A>, Stream<B>> f(final F<A, B> f) {
         return new F<Stream<A>, Stream<B>>() {
+          @Override
           public Stream<B> f(final Stream<A> as) {
             return as.map(f);
           }
@@ -306,6 +313,7 @@ public abstract class Stream<A> implements Iterable<A> {
   public final Stream<A> filter(final F<A, Boolean> f) {
     final Stream<A> as = dropWhile(not(f));
     return as.isNotEmpty() ? cons(as.head(), new P1<Stream<A>>() {
+      @Override
       public Stream<A> _1() {
         return as.tail()._1().filter(f);
       }
@@ -319,7 +327,8 @@ public abstract class Stream<A> implements Iterable<A> {
    * @return A new stream that has appended the given stream.
    */
   public final Stream<A> append(final Stream<A> as) {
-    return isEmpty() ? as : cons(head(), new P1<Stream<A>>() {
+    return isEmpty() ? as : as.isEmpty() ? this : cons(head(), new P1<Stream<A>>() {
+      @Override
       public Stream<A> _1() {
         return tail()._1().append(as);
       }
@@ -334,6 +343,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final Stream<A> append(final P1<Stream<A>> as) {
     return isEmpty() ? as._1() : cons(head(), new P1<Stream<A>>() {
+      @Override
       public Stream<A> _1() {
         return tail()._1().append(as);
       }
@@ -371,15 +381,17 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A, B> F<B, Stream<A>> sequence_(final Stream<F<B, A>> fs) {
     return fs.foldRight(new F2<F<B, A>, P1<F<B, Stream<A>>>, F<B, Stream<A>>>() {
+      @Override
       public F<B, Stream<A>> f(final F<B, A> baf, final P1<F<B, Stream<A>>> p1) {
         return Function.bind(baf, p1._1(), Function.curry(new F2<A, Stream<A>, Stream<A>>() {
+          @Override
           public Stream<A> f(final A a, final Stream<A> stream) {
             return cons(a, p(stream));
           }
         }));
       }
     }, Function
-        .<B, Stream<A>>constant(Stream.<A>nil()));
+    .<B, Stream<A>>constant(Stream.<A>nil()));
   }
 
   /**
@@ -402,14 +414,14 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final <B> Stream<B> bind(final F<A, Stream<B>> f) {
     return map(f).foldLeft(new F2<Stream<B>, Stream<B>, Stream<B>>() {
-        @Override
-        public Stream<B> f(Stream<B> accumulator, Stream<B> element) {
-            Stream<B> result = accumulator;
-            for (B single : element) {
-                result = result.cons(single);
-            }
-            return result;
+      @Override
+      public Stream<B> f(Stream<B> accumulator, Stream<B> element) {
+        Stream<B> result = accumulator;
+        for (final B single : element) {
+          result = result.cons(single);
         }
+        return result;
+      }
     }, Stream.<B>nil()).reverse();
   }
 
@@ -461,7 +473,7 @@ public abstract class Stream<A> implements Iterable<A> {
    * @return A new stream after performing the map, then final join.
    */
   public final <B, C, D, E> Stream<E> bind(final Stream<B> sb, final Stream<C> sc, final Stream<D> sd,
-                                     final F<A, F<B, F<C, F<D, E>>>> f) {
+      final F<A, F<B, F<C, F<D, E>>>> f) {
     return sd.apply(bind(sb, sc, f));
   }
 
@@ -477,7 +489,7 @@ public abstract class Stream<A> implements Iterable<A> {
    * @return A new stream after performing the map, then final join.
    */
   public final <B, C, D, E, F$> Stream<F$> bind(final Stream<B> sb, final Stream<C> sc, final Stream<D> sd,
-                                          final Stream<E> se, final F<A, F<B, F<C, F<D, F<E, F$>>>>> f) {
+      final Stream<E> se, final F<A, F<B, F<C, F<D, F<E, F$>>>>> f) {
     return se.apply(bind(sb, sc, sd, f));
   }
 
@@ -494,8 +506,8 @@ public abstract class Stream<A> implements Iterable<A> {
    * @return A new stream after performing the map, then final join.
    */
   public final <B, C, D, E, F$, G> Stream<G> bind(final Stream<B> sb, final Stream<C> sc, final Stream<D> sd,
-                                            final Stream<E> se, final Stream<F$> sf,
-                                            final F<A, F<B, F<C, F<D, F<E, F<F$, G>>>>>> f) {
+      final Stream<E> se, final Stream<F$> sf,
+      final F<A, F<B, F<C, F<D, F<E, F<F$, G>>>>>> f) {
     return sf.apply(bind(sb, sc, sd, se, f));
   }
 
@@ -513,8 +525,8 @@ public abstract class Stream<A> implements Iterable<A> {
    * @return A new stream after performing the map, then final join.
    */
   public final <B, C, D, E, F$, G, H> Stream<H> bind(final Stream<B> sb, final Stream<C> sc, final Stream<D> sd,
-                                               final Stream<E> se, final Stream<F$> sf, final Stream<G> sg,
-                                               final F<A, F<B, F<C, F<D, F<E, F<F$, F<G, H>>>>>>> f) {
+      final Stream<E> se, final Stream<F$> sf, final Stream<G> sg,
+      final F<A, F<B, F<C, F<D, F<E, F<F$, F<G, H>>>>>>> f) {
     return sg.apply(bind(sb, sc, sd, se, sf, f));
   }
 
@@ -533,9 +545,9 @@ public abstract class Stream<A> implements Iterable<A> {
    * @return A new stream after performing the map, then final join.
    */
   public final <B, C, D, E, F$, G, H, I> Stream<I> bind(final Stream<B> sb, final Stream<C> sc, final Stream<D> sd,
-                                                  final Stream<E> se, final Stream<F$> sf, final Stream<G> sg,
-                                                  final Stream<H> sh,
-                                                  final F<A, F<B, F<C, F<D, F<E, F<F$, F<G, F<H, I>>>>>>>> f) {
+      final Stream<E> se, final Stream<F$> sf, final Stream<G> sg,
+      final Stream<H> sh,
+      final F<A, F<B, F<C, F<D, F<E, F<F$, F<G, F<H, I>>>>>>>> f) {
     return sh.apply(bind(sb, sc, sd, se, sf, sg, f));
   }
 
@@ -558,8 +570,10 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final <B> Stream<B> apply(final Stream<F<A, B>> sf) {
     return sf.bind(new F<F<A, B>, Stream<B>>() {
+      @Override
       public Stream<B> f(final F<A, B> f) {
         return map(new F<A, B>() {
+          @Override
           public B f(final A a) {
             return f.f(a);
           }
@@ -608,6 +622,7 @@ public abstract class Stream<A> implements Iterable<A> {
       return s;
     final Stream<Stream<A>> t = s.tail()._1();
     return cons(merge(o, s.head(), t.head()), new P1<Stream<Stream<A>>>() {
+      @Override
       public Stream<Stream<A>> _1() {
         return mergePairs(o, t.tail()._1());
       }
@@ -624,11 +639,13 @@ public abstract class Stream<A> implements Iterable<A> {
     final A y = ys.head();
     if (o.isGreaterThan(x, y))
       return cons(y, new P1<Stream<A>>() {
+        @Override
         public Stream<A> _1() {
           return merge(o, xs, ys.tail()._1());
         }
       });
     return cons(x, new P1<Stream<A>>() {
+      @Override
       public Stream<A> _1() {
         return merge(o, xs.tail()._1(), ys);
       }
@@ -663,6 +680,7 @@ public abstract class Stream<A> implements Iterable<A> {
 
   private static <A> F<Stream<A>, Promise<Stream<A>>> qs_(final Ord<A> o, final Strategy<Unit> s) {
     return new F<Stream<A>, Promise<Stream<A>>>() {
+      @Override
       public Promise<Stream<A>> f(final Stream<A> xs) {
         return xs.qs(o, s);
       }
@@ -670,9 +688,9 @@ public abstract class Stream<A> implements Iterable<A> {
   }
 
   private static <A> F<Stream<A>, Promise<Stream<A>>> flt(final Ord<A> o,
-                                                          final Strategy<Unit> s,
-                                                          final A x,
-                                                          final F<Boolean, Boolean> f) {
+      final Strategy<Unit> s,
+      final A x,
+      final F<Boolean, Boolean> f) {
     final F<F<A, Boolean>, F<Stream<A>, Stream<A>>> filter = filter();
     final F<A, Boolean> lt = o.isLessThan(x);
     return compose(qs_(o, s), filter.f(compose(f, lt)));
@@ -685,30 +703,35 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final Collection<A> toCollection() {
     return new AbstractCollection<A>() {
+      @Override
       public Iterator<A> iterator() {
         return new Iterator<A>() {
           private Stream<A> xs = Stream.this;
 
+          @Override
           public boolean hasNext() {
-            return xs.isNotEmpty();
+            return this.xs.isNotEmpty();
           }
 
+          @Override
           public A next() {
-            if (xs.isEmpty())
+            if (this.xs.isEmpty())
               throw new NoSuchElementException();
             else {
-              final A a = xs.head();
-              xs = xs.tail()._1();
+              final A a = this.xs.head();
+              this.xs = this.xs.tail()._1();
               return a;
             }
           }
 
+          @Override
           public void remove() {
             throw new UnsupportedOperationException();
           }
         };
       }
 
+      @Override
       public int size() {
         return length();
       }
@@ -726,6 +749,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static Stream<Integer> range(final int from, final long to) {
     return from >= to ? Stream.<Integer>nil() : cons(from, new P1<Stream<Integer>>() {
+      @Override
       public Stream<Integer> _1() {
         return range(from + 1, to);
       }
@@ -740,12 +764,13 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A> Stream<A> stream(final A... as) {
     return as.length == 0 ? Stream.<A>nil()
-                          : unfold(P2.tuple(new F2<A[], Integer, Option<P2<A, P2<A[], Integer>>>>() {
-                            public Option<P2<A, P2<A[], Integer>>> f(final A[] as, final Integer i) {
-                              return i >= as.length ? Option.<P2<A, P2<A[], Integer>>>none()
-                                                    : some(P.p(as[i], P.p(as, i + 1)));
-                            }
-                          }), P.p(as, 0));
+        : unfold(P2.tuple(new F2<A[], Integer, Option<P2<A, P2<A[], Integer>>>>() {
+          @Override
+          public Option<P2<A, P2<A[], Integer>>> f(final A[] as, final Integer i) {
+            return i >= as.length ? Option.<P2<A, P2<A[], Integer>>>none()
+                : some(P.p(as[i], P.p(as, i + 1)));
+          }
+        }), P.p(as, 0));
   }
 
   /**
@@ -773,8 +798,10 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A> Stream<A> forever(final Enumerator<A> e, final A from, final long step) {
     return cons(from, new P1<Stream<A>>() {
+      @Override
       public Stream<A> _1() {
         return e.plus(from, step).map(new F<A, Stream<A>>() {
+          @Override
           public Stream<A> f(final A a) {
             return forever(e, a, step);
           }
@@ -811,12 +838,15 @@ public abstract class Stream<A> implements Iterable<A> {
   public static <A> Stream<A> range(final Enumerator<A> e, final A from, final A to, final long step) {
     final Ordering o = e.order().compare(from, to);
     return o == EQ || step > 0L && o == GT || step < 0L && o == LT ? single(from) : cons(from, new P1<Stream<A>>() {
+      @Override
       public Stream<A> _1() {
         return Stream.join(e.plus(from, step).filter(new F<A, Boolean>() {
+          @Override
           public Boolean f(final A a) {
             return !(o == LT ? e.order().isLessThan(to, a) : e.order().isGreaterThan(to, a));
           }
         }).map(new F<A, Stream<A>>() {
+          @Override
           public Stream<A> f(final A a) {
             return range(e, a, to, step);
           }
@@ -833,6 +863,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static Stream<Integer> range(final int from) {
     return cons(from, new P1<Stream<Integer>>() {
+      @Override
       public Stream<Integer> _1() {
         return range(from + 1);
       }
@@ -846,6 +877,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A> F<F<A, Boolean>, F<Stream<A>, Stream<A>>> filter() {
     return curry(new F2<F<A, Boolean>, Stream<A>, Stream<A>>() {
+      @Override
       public Stream<A> f(final F<A, Boolean> f, final Stream<A> as) {
         return as.filter(f);
       }
@@ -862,11 +894,12 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final <B> Stream<B> zapp(final Stream<F<A, B>> fs) {
     return fs.isEmpty() || isEmpty() ? Stream.<B>nil() :
-           cons(fs.head().f(head()), new P1<Stream<B>>() {
-             public Stream<B> _1() {
-               return tail()._1().zapp(fs.tail()._1());
-             }
-           });
+      cons(fs.head().f(head()), new P1<Stream<B>>() {
+        @Override
+        public Stream<B> _1() {
+          return tail()._1().zapp(fs.tail()._1());
+        }
+      });
   }
 
   /**
@@ -906,6 +939,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final <B, C> F<Stream<B>, Stream<C>> zipWith(final F<A, F<B, C>> f) {
     return new F<Stream<B>, Stream<C>>() {
+      @Override
       public Stream<C> f(final Stream<B> stream) {
         return zipWith(stream, f);
       }
@@ -933,6 +967,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final Stream<P2<A, Integer>> zipIndex() {
     return zipWith(range(0), new F2<A, Integer, P2<A, Integer>>() {
+      @Override
       public P2<A, Integer> f(final A a, final Integer i) {
         return p(a, i);
       }
@@ -1031,6 +1066,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final Stream<A> cons(final A a) {
     return new Cons<A>(a, new P1<Stream<A>>() {
+      @Override
       public Stream<A> _1() {
         return Stream.this;
       }
@@ -1066,7 +1102,7 @@ public abstract class Stream<A> implements Iterable<A> {
    * @return A new stream with the given element at the end.
    */
   public final Stream<A> snoc(final A a) {
-    return snoc(p(a));
+    return append(single(a));
   }
 
   /**
@@ -1077,6 +1113,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final Stream<A> snoc(final P1<A> a) {
     return append(new P1<Stream<A>>() {
+      @Override
       public Stream<A> _1() {
         return single(a._1());
       }
@@ -1091,12 +1128,13 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final Stream<A> take(final int n) {
     return n <= 0 || isEmpty() ?
-           Stream.<A>nil() :
-           cons(head(), new P1<Stream<A>>() {
-             public Stream<A> _1() {
-               return tail()._1().take(n - 1);
-             }
-           });
+        Stream.<A>nil() :
+          cons(head(), new P1<Stream<A>>() {
+            @Override
+            public Stream<A> _1() {
+              return tail()._1().take(n - 1);
+            }
+          });
   }
 
   /**
@@ -1125,14 +1163,15 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final Stream<A> takeWhile(final F<A, Boolean> f) {
     return isEmpty() ?
-           this :
-           f.f(head()) ?
-           cons(head(), new P1<Stream<A>>() {
-             public Stream<A> _1() {
-               return tail()._1().takeWhile(f);
-             }
-           }) :
-           Stream.<A>nil();
+        this :
+          f.f(head()) ?
+              cons(head(), new P1<Stream<A>>() {
+                @Override
+                public Stream<A> _1() {
+                  return tail()._1().takeWhile(f);
+                }
+              }) :
+                Stream.<A>nil();
   }
 
   /**
@@ -1219,10 +1258,13 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final Stream<A> reverse() {
     return foldLeft(new F<Stream<A>, F<A, Stream<A>>>() {
+      @Override
       public F<A, Stream<A>> f(final Stream<A> as) {
         return new F<A, Stream<A>>() {
+          @Override
           public Stream<A> f(final A a) {
             return cons(a, new P1<Stream<A>>() {
+              @Override
               public Stream<A> _1() {
                 return as;
               }
@@ -1343,6 +1385,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final Stream<Stream<A>> tails() {
     return isEmpty() ? Stream.<Stream<A>>nil() : cons(this, new P1<Stream<Stream<A>>>() {
+      @Override
       public Stream<Stream<A>> _1() {
         return tail()._1().tails();
       }
@@ -1356,11 +1399,13 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final Stream<Stream<A>> inits() {
     final Stream<Stream<A>> nil = Stream.cons(Stream.<A>nil(), new P1<Stream<Stream<A>>>() {
+      @Override
       public Stream<Stream<A>> _1() {
         return nil();
       }
     });
     return isEmpty() ? nil : nil.append(new P1<Stream<Stream<A>>>() {
+      @Override
       public Stream<Stream<A>> _1() {
         return tail()._1().inits().map(Stream.<A>cons_().f(head()));
       }
@@ -1374,6 +1419,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final Stream<Stream<A>> substreams() {
     return tails().bind(new F<Stream<A>, Stream<Stream<A>>>() {
+      @Override
       public Stream<Stream<A>> f(final Stream<A> stream) {
         return stream.inits();
       }
@@ -1388,6 +1434,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final Option<Integer> indexOf(final F<A, Boolean> p) {
     return zipIndex().find(new F<P2<A, Integer>, Boolean>() {
+      @Override
       public Boolean f(final P2<A, Integer> p2) {
         return p.f(p2._1());
       }
@@ -1402,12 +1449,13 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final <B> Stream<B> sequenceW(final Stream<F<Stream<A>, B>> fs) {
     return fs.isEmpty()
-           ? Stream.<B>nil()
-           : cons(fs.head().f(this), new P1<Stream<B>>() {
-             public Stream<B> _1() {
-               return sequenceW(fs.tail()._1());
-             }
-           });
+        ? Stream.<B>nil()
+            : cons(fs.head().f(this), new P1<Stream<B>>() {
+              @Override
+              public Stream<B> _1() {
+                return sequenceW(fs.tail()._1());
+              }
+            });
   }
 
   /**
@@ -1417,6 +1465,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public final F<Integer, A> toFunction() {
     return new F<Integer, A>() {
+      @Override
       public A f(final Integer i) {
         return index(i);
       }
@@ -1445,11 +1494,12 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A, B> Stream<A> fromFunction(final Enumerator<B> e, final F<B, A> f, final B i) {
     return cons(f.f(i), new P1<Stream<A>>() {
+      @Override
       public Stream<A> _1() {
         final Option<B> s = e.successor(i);
         return s.isSome()
-               ? fromFunction(e, f, s.some())
-               : Stream.<A>nil();
+            ? fromFunction(e, f, s.some())
+                : Stream.<A>nil();
       }
     });
   }
@@ -1462,6 +1512,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A, B> P2<Stream<A>, Stream<B>> unzip(final Stream<P2<A, B>> xs) {
     return xs.foldRight(new F2<P2<A, B>, P1<P2<Stream<A>, Stream<B>>>, P2<Stream<A>, Stream<B>>>() {
+      @Override
       public P2<Stream<A>, Stream<B>> f(final P2<A, B> p, final P1<P2<Stream<A>, Stream<B>>> ps) {
         final P2<Stream<A>, Stream<B>> pp = ps._1();
         return P.p(cons(p._1(), P.p(pp._1())), cons(p._2(), P.p(pp._2())));
@@ -1476,6 +1527,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A, B, C> F<Stream<A>, F<Stream<B>, F<F<A, F<B, C>>, Stream<C>>>> zipWith() {
     return curry(new F3<Stream<A>, Stream<B>, F<A, F<B, C>>, Stream<C>>() {
+      @Override
       public Stream<C> f(final Stream<A> as, final Stream<B> bs, final F<A, F<B, C>> f) {
         return as.zipWith(bs, f);
       }
@@ -1483,10 +1535,12 @@ public abstract class Stream<A> implements Iterable<A> {
   }
 
   private static final class Nil<A> extends Stream<A> {
+    @Override
     public A head() {
       throw error("head on empty stream");
     }
 
+    @Override
     public P1<Stream<A>> tail() {
       throw error("tail on empty stream");
     }
@@ -1501,12 +1555,14 @@ public abstract class Stream<A> implements Iterable<A> {
       this.tail = tail.memo();
     }
 
+    @Override
     public A head() {
-      return head;
+      return this.head;
     }
 
+    @Override
     public P1<Stream<A>> tail() {
-      return tail;
+      return this.tail;
     }
 
   }
@@ -1518,8 +1574,10 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A> F<A, F<P1<Stream<A>>, Stream<A>>> cons() {
     return new F<A, F<P1<Stream<A>>, Stream<A>>>() {
+      @Override
       public F<P1<Stream<A>>, Stream<A>> f(final A a) {
         return new F<P1<Stream<A>>, Stream<A>>() {
+          @Override
           public Stream<A> f(final P1<Stream<A>> list) {
             return cons(a, list);
           }
@@ -1535,32 +1593,42 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A> F<A, F<Stream<A>, Stream<A>>> cons_() {
     return curry(new F2<A, Stream<A>, Stream<A>>() {
+      @Override
       public Stream<A> f(final A a, final Stream<A> as) {
         return as.cons(a);
       }
     });
   }
 
-  /**
-   * Returns an empty stream.
-   *
-   * @return An empty stream.
-   */
-  public static <A> Stream<A> nil() {
-    return new Nil<A>();
-  }
+  @SuppressWarnings("unchecked")
+  private static final Stream<?> NIL = new Nil<Object>();
 
   /**
    * Returns an empty stream.
    *
    * @return An empty stream.
    */
+  @SuppressWarnings("unchecked")
+  public static <A> Stream<A> nil() {
+    return (Stream<A>)NIL;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static final P1<?> NIL_ = new P1<Stream<?>>() {
+    @Override
+    public Stream<?> _1() {
+      return NIL;
+    }
+  };
+
+  /**
+   * Returns an empty stream.
+   *
+   * @return An empty stream.
+   */
+  @SuppressWarnings("unchecked")
   public static <A> P1<Stream<A>> nil_() {
-    return new P1<Stream<A>>() {
-      public Stream<A> _1() {
-        return new Nil<A>();
-      }
-    };
+    return (P1<Stream<A>>)NIL_;
   }
 
   /**
@@ -1570,6 +1638,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A> F<Stream<A>, Boolean> isEmpty_() {
     return new F<Stream<A>, Boolean>() {
+      @Override
       public Boolean f(final Stream<A> as) {
         return as.isEmpty();
       }
@@ -1583,6 +1652,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A> F<Stream<A>, Boolean> isNotEmpty_() {
     return new F<Stream<A>, Boolean>() {
+      @Override
       public Boolean f(final Stream<A> as) {
         return as.isNotEmpty();
       }
@@ -1596,11 +1666,17 @@ public abstract class Stream<A> implements Iterable<A> {
    * @return A stream of one element containing the given value.
    */
   public static <A> Stream<A> single(final A a) {
-    return cons(a, new P1<Stream<A>>() {
-      public Stream<A> _1() {
-        return nil();
-      }
-    });
+    return cons(a, Stream.<A>nil_());
+  }
+
+  /**
+   * Returns a stream of one element containing the given value.
+   *
+   * @param a The value for the head of the returned stream.
+   * @return A stream of one element containing the given value.
+   */
+  public static <A> Stream<A> single(final P1<A> a) {
+    return single(a._1());
   }
 
   /**
@@ -1610,6 +1686,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A> F<A, Stream<A>> single() {
     return new F<A, Stream<A>>() {
+      @Override
       public Stream<A> f(final A a) {
         return single(a);
       }
@@ -1644,6 +1721,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A> F<Stream<Stream<A>>, Stream<A>> join() {
     return new F<Stream<Stream<A>>, Stream<A>>() {
+      @Override
       public Stream<A> f(final Stream<Stream<A>> as) {
         return join(as);
       }
@@ -1665,6 +1743,7 @@ public abstract class Stream<A> implements Iterable<A> {
     else {
       final P2<A, B> p = o.some();
       return cons(p._1(), new P1<Stream<A>>() {
+        @Override
         public Stream<A> _1() {
           return unfold(f, p._2());
         }
@@ -1685,8 +1764,10 @@ public abstract class Stream<A> implements Iterable<A> {
   public static <A> Stream<A> iterateWhile(final F<A, A> f, final F<A, Boolean> p, final A a) {
     return unfold(
         new F<A, Option<P2<A, A>>>() {
+          @Override
           public Option<P2<A, A>> f(final A o) {
             return Option.iif(new F<P2<A, A>, Boolean>() {
+              @Override
               public Boolean f(final P2<A, A> p2) {
                 return p.f(o);
               }
@@ -1708,6 +1789,7 @@ public abstract class Stream<A> implements Iterable<A> {
         if (i.hasNext()) {
           final A a = i.next();
           return cons(a, new P1<Stream<A>>() {
+            @Override
             public Stream<A> _1() {
               return iteratorStream(i);
             }
@@ -1728,6 +1810,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A> Stream<A> repeat(final A a) {
     return cons(a, new P1<Stream<A>>() {
+      @Override
       public Stream<A> _1() {
         return repeat(a);
       }
@@ -1745,6 +1828,7 @@ public abstract class Stream<A> implements Iterable<A> {
       throw error("cycle on empty list");
     else
       return as.append(new P1<Stream<A>>() {
+        @Override
         public Stream<A> _1() {
           return cycle(as);
         }
@@ -1760,6 +1844,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A> Stream<A> iterate(final F<A, A> f, final A a) {
     return cons(a, new P1<Stream<A>>() {
+      @Override
       public Stream<A> _1() {
         return iterate(f, f.f(a));
       }
@@ -1774,6 +1859,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A> F<F<A, A>, F<A, Stream<A>>> iterate() {
     return curry(new F2<F<A, A>, A, Stream<A>>() {
+      @Override
       public Stream<A> f(final F<A, A> f, final A a) {
         return iterate(f, a);
       }
@@ -1787,6 +1873,7 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A, B> F<F<A, Stream<B>>, F<Stream<A>, Stream<B>>> bind_() {
     return curry(new F2<F<A, Stream<B>>, Stream<A>, Stream<B>>() {
+      @Override
       public Stream<B> f(final F<A, Stream<B>> f, final Stream<A> as) {
         return as.bind(f);
       }
@@ -1800,9 +1887,11 @@ public abstract class Stream<A> implements Iterable<A> {
    */
   public static <A, B> F<F<A, F<P1<B>, B>>, F<B, F<Stream<A>, B>>> foldRight() {
     return curry(new F3<F<A, F<P1<B>, B>>, B, Stream<A>, B>() {
+      @Override
       public B f(final F<A, F<P1<B>, B>> f, final B b, final Stream<A> as) {
         return as.foldRight(f, b);
       }
     });
   }
+
 }
