@@ -22,5 +22,5 @@ public enum Ordering {
    */
   GT;
   
-  public int toSign() { return ordinal() - 1 ; }
+  public int toPlusOrMinusOne() { return ordinal() - 1 ; }
 }
