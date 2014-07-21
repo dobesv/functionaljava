@@ -1,9 +1,10 @@
 package fj;
 
+import java.lang.ref.SoftReference;
+
+import fj.data.Array;
 import fj.data.List;
 import fj.data.Stream;
-import fj.data.Array;
-import java.lang.ref.SoftReference;
 
 /**
  * A product-1. Also, the identity monad.
@@ -18,6 +19,12 @@ public abstract class P1<A> {
    */
   public abstract A _1();
 
+
+  @Override
+  public String toString() {
+    return "P1("+_1()+")";
+  }
+
   /**
    * Map the element of the product.
    *
@@ -26,6 +33,7 @@ public abstract class P1<A> {
    */
   public final <X> P1<X> map(final F<A, X> f) {
     return new P1<X>() {
+      @Override
       public X _1() {
         return f.f(P1.this._1());
       }
@@ -39,6 +47,7 @@ public abstract class P1<A> {
    */
   public static <A> F<P1<A>, A> __1() {
     return new F<P1<A>, A>() {
+      @Override
       public A f(final P1<A> p) {
         return p._1();
       }
@@ -53,6 +62,7 @@ public abstract class P1<A> {
    */
   public static <A, B> F<P1<A>, P1<B>> fmap(final F<A, B> f) {
     return new F<P1<A>, P1<B>>() {
+      @Override
       public P1<B> f(final P1<A> a) {
         return a.map(f);
       }
@@ -68,6 +78,7 @@ public abstract class P1<A> {
    */
   public static <A, B> P1<B> bind(final P1<A> a, final F<A, P1<B>> f) {
     return new P1<B>() {
+      @Override
       public B _1() {
         return f.f(a._1())._1();
       }
@@ -82,8 +93,10 @@ public abstract class P1<A> {
    */
   public static <A, B> F<A, P1<B>> curry(final F<A, B> f) {
     return new F<A, P1<B>>() {
+      @Override
       public P1<B> f(final A a) {
         return new P1<B>() {
+          @Override
           public B _1() {
             return f.f(a);
           }
@@ -101,6 +114,7 @@ public abstract class P1<A> {
    */
   public static <A, B> P1<B> apply(final P1<A> ca, final P1<F<A, B>> cf) {
     return bind(cf, new F<F<A, B>, P1<B>>() {
+      @Override
       public P1<B> f(final F<A, B> f) {
         return fmap(f).f(ca);
       }
@@ -137,6 +151,7 @@ public abstract class P1<A> {
    */
   public static <A, B, C> F<P1<A>, F<P1<B>, P1<C>>> liftM2(final F<A, F<B, C>> f) {
     return Function.curry(new F2<P1<A>, P1<B>, P1<C>>() {
+      @Override
       public P1<C> f(final P1<A> pa, final P1<B> pb) {
         return bind(pa, pb, f);
       }
@@ -160,6 +175,7 @@ public abstract class P1<A> {
    */
   public static <A> F<List<P1<A>>, P1<List<A>>> sequenceList() {
     return new F<List<P1<A>>, P1<List<A>>>() {
+      @Override
       public P1<List<A>> f(final List<P1<A>> as) {
         return sequence(as);
       }
@@ -184,6 +200,7 @@ public abstract class P1<A> {
    */
   public static <A> P1<Array<A>> sequence(final Array<P1<A>> as) {
     return new P1<Array<A>>() {
+      @Override
       public Array<A> _1() {
         return as.map(P1.<A>__1());
       }
@@ -202,13 +219,14 @@ public abstract class P1<A> {
       @SuppressWarnings({"InstanceVariableMayNotBeInitialized"})
       private volatile SoftReference<A> v;
 
+      @Override
       public A _1() {
-        A a = v != null ? v.get() : null;
+        A a = this.v != null ? this.v.get() : null;
         if (a == null)
-          synchronized (latch) {
-            if (v == null || v.get() == null)
+          synchronized (this.latch) {
+            if (this.v == null || this.v.get() == null)
               a = self._1();
-            v = new SoftReference<A>(a);
+            this.v = new SoftReference<A>(a);
           }
         return a;
       }
@@ -218,12 +236,13 @@ public abstract class P1<A> {
   /**
    * Returns a constant function that always uses this value.
    *
-   * @return A constant function that always uses this value. 
+   * @return A constant function that always uses this value.
    */
   public final <B> F<B, A> constant() {
     return new F<B, A>() {
+      @Override
       public A f(final B b) {
-          return _1();
+        return _1();
       }
     };
   }

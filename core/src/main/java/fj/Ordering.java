@@ -20,5 +20,7 @@ public enum Ordering {
   /**
    * Greater than.
    */
-  GT
+  GT;
+  
+  public int toSign() { return ordinal() - 1 ; }
 }

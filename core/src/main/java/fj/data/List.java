@@ -1,6 +1,29 @@
 package fj.data;
 
 import static fj.Bottom.error;
+import static fj.Function.compose;
+import static fj.Function.constant;
+import static fj.Function.curry;
+import static fj.Function.identity;
+import static fj.Ord.intOrd;
+import static fj.Ordering.GT;
+import static fj.P.p;
+import static fj.P.p2;
+import static fj.Unit.unit;
+import static fj.data.Array.mkArray;
+import static fj.data.List.Buffer.empty;
+import static fj.data.List.Buffer.fromList;
+import static fj.data.Option.none;
+import static fj.data.Option.some;
+import static fj.function.Booleans.not;
+
+import java.util.AbstractCollection;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+import org.eclipse.jdt.annotation.NonNull;
+
 import fj.Effect;
 import fj.Equal;
 import fj.F;
@@ -10,33 +33,13 @@ import fj.Function;
 import fj.Hash;
 import fj.Monoid;
 import fj.Ord;
+import fj.Ordering;
 import fj.P;
 import fj.P1;
 import fj.P2;
 import fj.Show;
 import fj.Unit;
-import static fj.Function.curry;
-import static fj.Function.constant;
-import static fj.Function.identity;
-import static fj.Function.compose;
-import static fj.P.p;
-import static fj.P.p2;
-import static fj.Unit.unit;
-import static fj.data.Array.mkArray;
-import static fj.data.List.Buffer.*;
-import static fj.data.Option.none;
-import static fj.data.Option.some;
-import static fj.function.Booleans.not;
-import static fj.Ordering.GT;
-import static fj.Ord.intOrd;
-
-import fj.Ordering;
 import fj.control.Trampoline;
-
-import java.util.AbstractCollection;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 /**
  * Provides an in-memory, immutable, singly linked list.
@@ -53,6 +56,7 @@ public abstract class List<A> implements Iterable<A> {
    *
    * @return A iterator for this list.
    */
+  @Override
   public final Iterator<A> iterator() {
     return toCollection().iterator();
   }
@@ -78,8 +82,10 @@ public abstract class List<A> implements Iterable<A> {
    */
   public final int length() {
     return foldLeft(new F<Integer, F<A, Integer>>() {
+      @Override
       public F<A, Integer> f(final Integer i) {
         return new F<A, Integer>() {
+          @Override
           public Integer f(final A a) {
             return i + 1;
           }
@@ -166,8 +172,10 @@ public abstract class List<A> implements Iterable<A> {
   public final Stream<A> toStream() {
     final Stream<A> nil = Stream.nil();
     return foldRight(new F<A, F<Stream<A>, Stream<A>>>() {
+      @Override
       public F<Stream<A>, Stream<A>> f(final A a) {
         return new F<Stream<A>, Stream<A>>() {
+          @Override
           public Stream<A> f(final Stream<A> as) {
             return as.cons(a);
           }
@@ -217,6 +225,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param c The class type of the array to return.
    * @return An array from this list.
    */
+  @NonNull
   public final A[] array(final Class<A[]> c) {
     return toArray(c).array(c);
   }
@@ -227,6 +236,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param a The element to prepend.
    * @return A new list with the given element at the head.
    */
+  @NonNull
   public final List<A> cons(final A a) {
     return new Cons<A>(a, this);
   }
@@ -238,6 +248,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param a The element to prepend.
    * @return A new list with the given element at the head.
    */
+  @NonNull
   public final List<A> conss(final A a) {
     return new Cons<A>(a, this);
   }
@@ -248,6 +259,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param f The function to map across this list.
    * @return A new list after the given function has been applied to each element.
    */
+  @NonNull
   public final <B> List<B> map(final F<A, B> f) {
     final Buffer<B> bs = empty();
 
@@ -264,6 +276,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param f The side-effect to perform for the given element.
    * @return The unit value.
    */
+  @NonNull
   public final Unit foreach(final F<A, Unit> f) {
     for (List<A> xs = this; xs.isNotEmpty(); xs = xs.tail()) {
       f.f(xs.head());
@@ -290,6 +303,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param f The predicate function to filter on.
    * @return A new list whose elements all match the given predicate.
    */
+  @NonNull
   public final List<A> filter(final F<A, Boolean> f) {
     final Buffer<A> b = empty();
 
@@ -310,6 +324,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param f The predicate function to filter on.
    * @return A new list whose elements do not match the given predicate.
    */
+  @NonNull
   public final List<A> removeAll(final F<A, Boolean> f) {
     return filter(compose(not, f));
   }
@@ -322,6 +337,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param e An <code>Equals</code> instance for the element's type.
    * @return A new list whose elements do not match the given predicate.
    */
+  @NonNull
   public final List<A> delete(final A a, final Equal<A> e) {
     final P2<List<A>, List<A>> p = span(compose(not, e.eq(a)));
     return p._2().isEmpty() ? p._1() : p._1().append(p._2().tail());
@@ -334,6 +350,7 @@ public abstract class List<A> implements Iterable<A> {
    *          hold, or the list is exhausted.
    * @return The first elements of the head of this list that match the given predicate function.
    */
+  @NonNull
   public final List<A> takeWhile(final F<A, Boolean> f) {
     final Buffer<A> b = empty();
     boolean taking = true;
@@ -357,6 +374,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param f The predicate function to apply through this list.
    * @return The list whose first element does not match the given predicate function.
    */
+  @NonNull
   public final List<A> dropWhile(final F<A, Boolean> f) {
     List<A> xs;
 
@@ -374,6 +392,7 @@ public abstract class List<A> implements Iterable<A> {
    * @return A tuple where the first element is the longest prefix of this list that satisfies
    *         the given predicate and the second element is the remainder of the list.
    */
+  @NonNull
   public final P2<List<A>, List<A>> span(final F<A, Boolean> p) {
     final Buffer<A> b = empty();
     for (List<A> xs = this; xs.isNotEmpty(); xs = xs.tail()) {
@@ -393,8 +412,10 @@ public abstract class List<A> implements Iterable<A> {
    * @return A tuple where the first element is the longest prefix of this list that does not satisfy
    *         the given predicate and the second element is the remainder of the list.
    */
+  @NonNull
   public final P2<List<A>, List<A>> breakk(final F<A, Boolean> p) {
     return span(new F<A, Boolean>() {
+      @Override
       public Boolean f(final A a) {
         return !p.f(a);
       }
@@ -407,6 +428,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param e The equality implementation for the elements.
    * @return A list of grouped elements.
    */
+  @NonNull
   public final List<List<A>> group(final Equal<A> e) {
     if (isEmpty())
       return nil();
@@ -423,6 +445,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param f The function to apply to each element of this list.
    * @return A new list after performing the map, then final join.
    */
+  @NonNull
   public final <B> List<B> bind(final F<A, List<B>> f) {
     final Buffer<B> b = empty();
 
@@ -465,6 +488,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A, B, C> F<List<A>, F<List<B>, List<C>>> liftM2(final F<A, F<B, C>> f) {
     return curry(new F2<List<A>, List<B>, List<C>>() {
+      @Override
       public List<C> f(final List<A> as, final List<B> bs) {
         return as.bind(bs, f);
       }
@@ -495,7 +519,7 @@ public abstract class List<A> implements Iterable<A> {
    * @return A new list after performing the map, then final join.
    */
   public final <B, C, D, E> List<E> bind(final List<B> lb, final List<C> lc, final List<D> ld,
-                                   final F<A, F<B, F<C, F<D, E>>>> f) {
+      final F<A, F<B, F<C, F<D, E>>>> f) {
     return ld.apply(bind(lb, lc, f));
   }
 
@@ -511,7 +535,7 @@ public abstract class List<A> implements Iterable<A> {
    * @return A new list after performing the map, then final join.
    */
   public final <B, C, D, E, F$> List<F$> bind(final List<B> lb, final List<C> lc, final List<D> ld, final List<E> le,
-                                        final F<A, F<B, F<C, F<D, F<E, F$>>>>> f) {
+      final F<A, F<B, F<C, F<D, F<E, F$>>>>> f) {
     return le.apply(bind(lb, lc, ld, f));
   }
 
@@ -528,7 +552,7 @@ public abstract class List<A> implements Iterable<A> {
    * @return A new list after performing the map, then final join.
    */
   public final <B, C, D, E, F$, G> List<G> bind(final List<B> lb, final List<C> lc, final List<D> ld, final List<E> le,
-                                          final List<F$> lf, final F<A, F<B, F<C, F<D, F<E, F<F$, G>>>>>> f) {
+      final List<F$> lf, final F<A, F<B, F<C, F<D, F<E, F<F$, G>>>>>> f) {
     return lf.apply(bind(lb, lc, ld, le, f));
   }
 
@@ -546,8 +570,8 @@ public abstract class List<A> implements Iterable<A> {
    * @return A new list after performing the map, then final join.
    */
   public final <B, C, D, E, F$, G, H> List<H> bind(final List<B> lb, final List<C> lc, final List<D> ld, final List<E> le,
-                                             final List<F$> lf, final List<G> lg,
-                                             final F<A, F<B, F<C, F<D, F<E, F<F$, F<G, H>>>>>>> f) {
+      final List<F$> lf, final List<G> lg,
+      final F<A, F<B, F<C, F<D, F<E, F<F$, F<G, H>>>>>>> f) {
     return lg.apply(bind(lb, lc, ld, le, lf, f));
   }
 
@@ -566,8 +590,8 @@ public abstract class List<A> implements Iterable<A> {
    * @return A new list after performing the map, then final join.
    */
   public final <B, C, D, E, F$, G, H, I> List<I> bind(final List<B> lb, final List<C> lc, final List<D> ld, final List<E> le,
-                                                final List<F$> lf, final List<G> lg, final List<H> lh,
-                                                final F<A, F<B, F<C, F<D, F<E, F<F$, F<G, F<H, I>>>>>>>> f) {
+      final List<F$> lf, final List<G> lg, final List<H> lh,
+      final F<A, F<B, F<C, F<D, F<E, F<F$, F<G, F<H, I>>>>>>>> f) {
     return lh.apply(bind(lb, lc, ld, le, lf, lg, f));
   }
 
@@ -590,6 +614,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public final <B> List<B> apply(final List<F<A, B>> lf) {
     return lf.bind(new F<F<A, B>, List<B>>() {
+      @Override
       public List<B> f(final F<A, B> f) {
         return map(f);
       }
@@ -602,6 +627,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param as The list to append to this one.
    * @return A new list that has appended the given list.
    */
+  @NonNull
   public final List<A> append(final List<A> as) {
     return fromList(this).append(as).toList();
   }
@@ -625,7 +651,7 @@ public abstract class List<A> implements Iterable<A> {
    * @return The final result after the right-fold reduction.
    */
   public final <B> B foldRight(final F2<A, B, B> f, final B b) {
-    return foldRight(curry(f), b);
+    return isEmpty() ? b : f.f(head(), tail().foldRight(f, b));
   }
 
   /**
@@ -636,6 +662,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public final <B> Trampoline<B> foldRightC(final F2<A, B, B> f, final B b) {
     return Trampoline.suspend(new P1<Trampoline<B>>() {
+      @Override
       public Trampoline<B> _1() {
         return isEmpty() ? Trampoline.pure(b) : tail().foldRightC(f, b).map(f.f(head()));
       }
@@ -701,8 +728,10 @@ public abstract class List<A> implements Iterable<A> {
    */
   public final List<A> reverse() {
     return foldLeft(new F<List<A>, F<A, List<A>>>() {
+      @Override
       public F<A, List<A>> f(final List<A> as) {
         return new F<A, List<A>>() {
+          @Override
           public List<A> f(final A a) {
             return cons(a, as);
           }
@@ -772,10 +801,12 @@ public abstract class List<A> implements Iterable<A> {
     for (List<A> xs = this; xs.isNotEmpty(); xs = xs.tail()) {
       final A h = xs.head();
       s = c < i ? s.map1(new F<List<A>, List<A>>() {
+        @Override
         public List<A> f(final List<A> as) {
           return as.snoc(h);
         }
       }) : s.map2(new F<List<A>, List<A>>() {
+        @Override
         public List<A> f(final List<A> as) {
           return as.snoc(h);
         }
@@ -799,6 +830,7 @@ public abstract class List<A> implements Iterable<A> {
     if (isEmpty())
       throw error("Partition on empty list.");
     return unfold(new F<List<A>, Option<P2<List<A>, List<A>>>>() {
+      @Override
       public Option<P2<List<A>, List<A>>> f(final List<A> as) {
         return as.isEmpty() ? Option.<P2<List<A>, List<A>>>none() : some(as.splitAt(n));
       }
@@ -916,6 +948,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A, B, C> F<List<A>, F<List<B>, F<F<A, F<B, C>>, List<C>>>> zipWith() {
     return curry(new F3<List<A>, List<B>, F<A, F<B, C>>, List<C>>() {
+      @Override
       public List<C> f(final List<A> as, final List<B> bs, final F<A, F<B, C>> f) {
         return as.zipWith(bs, f);
       }
@@ -941,6 +974,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A, B> F<List<A>, F<List<B>, List<P2<A, B>>>> zip() {
     return curry(new F2<List<A>, List<B>, List<P2<A, B>>>() {
+      @Override
       public List<P2<A, B>> f(final List<A> as, final List<B> bs) {
         return as.zip(bs);
       }
@@ -954,8 +988,10 @@ public abstract class List<A> implements Iterable<A> {
    */
   public final List<P2<A, Integer>> zipIndex() {
     return zipWith(range(0, length()), new F<A, F<Integer, P2<A, Integer>>>() {
+      @Override
       public F<Integer, P2<A, Integer>> f(final A a) {
         return new F<Integer, P2<A, Integer>>() {
+          @Override
           public P2<A, Integer> f(final Integer i) {
             return p(a, i);
           }
@@ -1023,8 +1059,8 @@ public abstract class List<A> implements Iterable<A> {
    */
   public final List<A> intersperse(final A a) {
     return isEmpty() || tail().isEmpty() ?
-           this :
-           cons(head(), cons(a, tail().intersperse(a)));
+        this :
+          cons(head(), cons(a, tail().intersperse(a)));
   }
 
   /**
@@ -1055,6 +1091,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public final List<A> nub(final Equal<A> eq) {
     return isEmpty() ? this : cons(head(), tail().filter(new F<A, Boolean>() {
+      @Override
       public Boolean f(final A a) {
         return !eq.eq(a, head());
       }
@@ -1079,6 +1116,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A> F<List<A>, A> head_() {
     return new F<List<A>, A>() {
+      @Override
       public A f(final List<A> list) {
         return list.head();
       }
@@ -1092,6 +1130,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A> F<List<A>, List<A>> tail_() {
     return new F<List<A>, List<A>>() {
+      @Override
       public List<A> f(final List<A> list) {
         return list.tail();
       }
@@ -1129,10 +1168,13 @@ public abstract class List<A> implements Iterable<A> {
    */
   public final <B> Option<List<B>> mapMOption(final F<A, Option<B>> f) {
     return foldRight(new F2<A, Option<List<B>>, Option<List<B>>>() {
+      @Override
       public Option<List<B>> f(final A a, final Option<List<B>> bs) {
         return f.f(a).bind(new F<B, Option<List<B>>>() {
+          @Override
           public Option<List<B>> f(final B b) {
             return bs.map(new F<List<B>, List<B>>() {
+              @Override
               public List<B> f(final List<B> bbs) {
                 return bbs.cons(b);
               }
@@ -1151,10 +1193,13 @@ public abstract class List<A> implements Iterable<A> {
    */
   public final <B> Trampoline<List<B>> mapMTrampoline(final F<A, Trampoline<B>> f) {
     return foldRight(new F2<A, Trampoline<List<B>>, Trampoline<List<B>>>() {
+      @Override
       public Trampoline<List<B>> f(final A a, final Trampoline<List<B>> bs) {
         return f.f(a).bind(new F<B, Trampoline<List<B>>>() {
+          @Override
           public Trampoline<List<B>> f(final B b) {
             return bs.map(new F<List<B>, List<B>>() {
+              @Override
               public List<B> f(final List<B> bbs) {
                 return bbs.cons(b);
               }
@@ -1251,6 +1296,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A> F<List<A>, Integer> length_() {
     return new F<List<A>, Integer>() {
+      @Override
       public Integer f(final List<A> a) {
         return a.length();
       }
@@ -1278,36 +1324,65 @@ public abstract class List<A> implements Iterable<A> {
   }
 
   /**
+   * Compare this list to the other list using the given ordering.  If one list is
+   * a prefix of the other list, the longer list is considered greater.  Otherwise
+   * the first differing element is used to determine the order.
+   */
+  public final Ordering compare(final Ord<A> ord, final List<A> other) {
+    if(this.isEmpty()) {
+      if(other.isEmpty()) {
+        return Ordering.EQ;
+      } else {
+        return Ordering.GT;
+      }
+    } else if(other.isEmpty()) {
+      return Ordering.LT;
+    } else {
+      Ordering result = ord.compare(head(), other.head());
+      if(result == Ordering.EQ) {
+        return tail().compare(ord, other.tail());
+      } else {
+        return result;
+      }
+    }
+  }
+  
+  /**
    * Projects an immutable collection of this list.
    *
    * @return An immutable collection of this list.
    */
   public final Collection<A> toCollection() {
     return new AbstractCollection<A>() {
+      @Override
       public Iterator<A> iterator() {
         return new Iterator<A>() {
           private List<A> xs = List.this;
 
+          @Override
           public boolean hasNext() {
-            return xs.isNotEmpty();
+            return this.xs.isNotEmpty();
           }
 
+          @Override
           public A next() {
-            if (xs.isEmpty())
+            if (this.xs.isEmpty())
               throw new NoSuchElementException();
             else {
-              final A a = xs.head();
-              xs = xs.tail();
+              final A a = this.xs.head();
+              this.xs = this.xs.tail();
               return a;
             }
           }
 
+          @Override
           public void remove() {
             throw new UnsupportedOperationException();
           }
         };
       }
 
+      @Override
       public int size() {
         return length();
       }
@@ -1315,10 +1390,12 @@ public abstract class List<A> implements Iterable<A> {
   }
 
   private static final class Nil<A> extends List<A> {
+    @Override
     public A head() {
       throw error("head on empty list");
     }
 
+    @Override
     public List<A> tail() {
       throw error("tail on empty list");
     }
@@ -1333,12 +1410,14 @@ public abstract class List<A> implements Iterable<A> {
       this.tail = tail;
     }
 
+    @Override
     public A head() {
-      return head;
+      return this.head;
     }
 
+    @Override
     public List<A> tail() {
-      return tail;
+      return this.tail;
     }
 
     private void tail(final List<A> tail) {
@@ -1352,17 +1431,23 @@ public abstract class List<A> implements Iterable<A> {
    * @param as The elements to construct a list with.
    * @return A list with the given elements.
    */
-  public static <A> List<A> list(final A... as) {
+  @NonNull
+  public static <A> List<A> list(@SuppressWarnings("unchecked") final A... as) {
     return Array.array(as).toList();
   }
+
+  @SuppressWarnings("rawtypes")
+  @NonNull
+  private static final List NIL = new Nil();
 
   /**
    * Returns an empty list.
    *
    * @return An empty list.
    */
+  @NonNull
   public static <A> List<A> nil() {
-    return new Nil<A>();
+    return NIL;
   }
 
   /**
@@ -1372,8 +1457,10 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A> F<A, F<List<A>, List<A>>> cons() {
     return new F<A, F<List<A>, List<A>>>() {
+      @Override
       public F<List<A>, List<A>> f(final A a) {
         return new F<List<A>, List<A>>() {
+          @Override
           public List<A> f(final List<A> tail) {
             return cons(a, tail);
           }
@@ -1390,6 +1477,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A> F<A, List<A>> cons(final List<A> tail) {
     return new F<A, List<A>>() {
+      @Override
       public List<A> f(final A a) {
         return tail.cons(a);
       }
@@ -1404,6 +1492,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A> F<List<A>, List<A>> cons_(final A a) {
     return new F<List<A>, List<A>>() {
+      @Override
       public List<A> f(final List<A> as) {
         return as.cons(a);
       }
@@ -1417,6 +1506,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param tail The list to prepend to.
    * @return The list with the given element prepended.
    */
+  @NonNull
   public static <A> List<A> cons(final A head, final List<A> tail) {
     return new Cons<A>(head, tail);
   }
@@ -1428,6 +1518,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A> F<List<A>, Boolean> isEmpty_() {
     return new F<List<A>, Boolean>() {
+      @Override
       public Boolean f(final List<A> as) {
         return as.isEmpty();
       }
@@ -1441,6 +1532,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A> F<List<A>, Boolean> isNotEmpty_() {
     return new F<List<A>, Boolean>() {
+      @Override
       public Boolean f(final List<A> as) {
         return as.isNotEmpty();
       }
@@ -1465,6 +1557,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A> F<List<List<A>>, List<A>> join() {
     return new F<List<List<A>>, List<A>>() {
+      @Override
       public List<A> f(final List<List<A>> as) {
         return join(as);
       }
@@ -1549,6 +1642,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static F<String, List<Character>> fromString() {
     return new F<String, List<Character>>() {
+      @Override
       public List<Character> f(final String s) {
         return fromString(s);
       }
@@ -1562,10 +1656,12 @@ public abstract class List<A> implements Iterable<A> {
    * @param cs The list of characters to produce the string from.
    * @return A string from the given list of characters.
    */
+  @NonNull
   public static String asString(final List<Character> cs) {
     final StringBuilder sb = new StringBuilder();
 
     cs.foreach(new F<Character, Unit>() {
+      @Override
       public Unit f(final Character c) {
         sb.append(c);
         return unit();
@@ -1579,8 +1675,10 @@ public abstract class List<A> implements Iterable<A> {
    *
    * @return A first-class <code>asString</code>.
    */
+  @NonNull
   public static F<List<Character>, String> asString() {
     return new F<List<Character>, String>() {
+      @Override
       public String f(final List<Character> cs) {
         return asString(cs);
       }
@@ -1593,6 +1691,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param a The value for the head of the returned list.
    * @return A list of one element containing the given value.
    */
+  @NonNull
   public static <A> List<A> single(final A a) {
     return cons(a, List.<A>nil());
   }
@@ -1610,8 +1709,10 @@ public abstract class List<A> implements Iterable<A> {
   public static <A> List<A> iterateWhile(final F<A, A> f, final F<A, Boolean> p, final A a) {
     return unfold(
         new F<A, Option<P2<A, A>>>() {
+          @Override
           public Option<P2<A, A>> f(final A o) {
             return Option.iif(new F<P2<A, A>, Boolean>() {
+              @Override
               public Boolean f(final P2<A, A> p2) {
                 return p.f(o);
               }
@@ -1629,8 +1730,10 @@ public abstract class List<A> implements Iterable<A> {
    * @param a The key value to find the associated value of.
    * @return An associated value with the given key in the list of pairs.
    */
+  @NonNull
   public static <A, B> Option<B> lookup(final Equal<A> e, final List<P2<A, B>> x, final A a) {
     return x.find(new F<P2<A, B>, Boolean>() {
+      @Override
       public Boolean f(final P2<A, B> p) {
         return e.eq(p._1(), a);
       }
@@ -1645,6 +1748,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A, B> F2<List<P2<A, B>>, A, Option<B>> lookup(final Equal<A> e) {
     return new F2<List<P2<A, B>>, A, Option<B>>() {
+      @Override
       public Option<B> f(final List<P2<A, B>> x, final A a) {
         return lookup(e, x, a);
       }
@@ -1658,6 +1762,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A, B> F<F<A, List<B>>, F<List<A>, List<B>>> bind_() {
     return curry(new F2<F<A, List<B>>, List<A>, List<B>>() {
+      @Override
       public List<B> f(final F<A, List<B>> f, final List<A> as) {
         return as.bind(f);
       }
@@ -1671,6 +1776,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A, B> F<F<A, B>, F<List<A>, List<B>>> map_() {
     return curry(new F2<F<A, B>, List<A>, List<B>>() {
+      @Override
       public List<B> f(final F<A, B> f, final List<A> as) {
         return as.map(f);
       }
@@ -1696,6 +1802,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A, B> F<F<B, F<A, B>>, F<B, F<List<A>, B>>> foldLeft() {
     return curry(new F3<F<B, F<A, B>>, B, List<A>, B>() {
+      @Override
       public B f(final F<B, F<A, B>> f, final B b, final List<A> as) {
         return as.foldLeft(f, b);
       }
@@ -1709,6 +1816,7 @@ public abstract class List<A> implements Iterable<A> {
    */
   public static <A> F<Integer, F<List<A>, List<A>>> take() {
     return curry(new F2<Integer, List<A>, List<A>>() {
+      @Override
       public List<A> f(final Integer n, final List<A> as) {
         return as.take(n);
       }
@@ -1745,8 +1853,9 @@ public abstract class List<A> implements Iterable<A> {
      *
      * @return A iterator for this buffer.
      */
+    @Override
     public Iterator<A> iterator() {
-      return start.iterator();
+      return this.start.iterator();
     }
 
     /**
@@ -1756,17 +1865,17 @@ public abstract class List<A> implements Iterable<A> {
      * @return A new buffer with the given element appended.
      */
     public Buffer<A> snoc(final A a) {
-      if (exported)
+      if (this.exported)
         copy();
 
       final Cons<A> t = new Cons<A>(a, List.<A>nil());
 
-      if (tail == null)
-        start = t;
+      if (this.tail == null)
+        this.start = t;
       else
-        tail.tail(t);
+        this.tail.tail(t);
 
-      tail = t;
+      this.tail = t;
 
       return this;
     }
@@ -1791,8 +1900,8 @@ public abstract class List<A> implements Iterable<A> {
      * @return An immutable list projection of this buffer.
      */
     public List<A> toList() {
-      exported = !start.isEmpty();
-      return start;
+      this.exported = !this.start.isEmpty();
+      return this.start;
     }
 
     /**
@@ -1801,7 +1910,7 @@ public abstract class List<A> implements Iterable<A> {
      * @return An immutable collection of this buffer.
      */
     public Collection<A> toCollection() {
-      return start.toCollection();
+      return this.start.toCollection();
     }
 
     /**
@@ -1845,10 +1954,10 @@ public abstract class List<A> implements Iterable<A> {
 
     @SuppressWarnings({"ObjectEquality"})
     private void copy() {
-      List<A> s = start;
-      final Cons<A> t = tail;
-      start = nil();
-      exported = false;
+      List<A> s = this.start;
+      final Cons<A> t = this.tail;
+      this.start = nil();
+      this.exported = false;
       while (s != t) {
         snoc(s.head());
         s = s.tail();
@@ -1859,44 +1968,44 @@ public abstract class List<A> implements Iterable<A> {
     }
   }
 
-    /**
-     * Perform an equality test on this list which delegates to the .equals() method of the member instances.
-     * This is implemented with Equal.listEqual using the anyEqual rule.
-     *
-     * @param obj the other object to check for equality against.
-     * @return true if this list is equal to the provided argument
-     */
-    //Suppress the warning for cast to <code>List<A></code> because the type is checked in the previous line.
-    @SuppressWarnings({ "unchecked" })
-    @Override public boolean equals( final Object obj ) {
-        if ( obj == null || !( obj instanceof List ) ) { return false; }
+  /**
+   * Perform an equality test on this list which delegates to the .equals() method of the member instances.
+   * This is implemented with Equal.listEqual using the anyEqual rule.
+   *
+   * @param obj the other object to check for equality against.
+   * @return true if this list is equal to the provided argument
+   */
+  //Suppress the warning for cast to <code>List<A></code> because the type is checked in the previous line.
+  @SuppressWarnings({ "unchecked" })
+  @Override public boolean equals( final Object obj ) {
+    if ( obj == null || !( obj instanceof List ) ) { return false; }
 
-        //Casting to List<A> here does not cause a runtime exception even if the type arguments don't match.
-        //The cast is done to avoid the compiler warning "raw use of parameterized class 'List'"
-        return Equal.listEqual( Equal.<A>anyEqual() ).eq( this, (List<A>) obj );
-    }
+    //Casting to List<A> here does not cause a runtime exception even if the type arguments don't match.
+    //The cast is done to avoid the compiler warning "raw use of parameterized class 'List'"
+    return Equal.listEqual( Equal.<A>anyEqual() ).eq( this, (List<A>) obj );
+  }
 
-    /**
-     * Compute the hash code from this list as a function of the hash codes of its members.
-     * Delegates to Hash.listHash, using the anyHash() rule, which uses the hash codes of the contents.
-     *
-     * @return the hash code for this list.
-     */
-    @Override public int hashCode() {
-        return Hash.listHash( Hash.<A>anyHash() ).hash( this );
-    }
+  /**
+   * Compute the hash code from this list as a function of the hash codes of its members.
+   * Delegates to Hash.listHash, using the anyHash() rule, which uses the hash codes of the contents.
+   *
+   * @return the hash code for this list.
+   */
+  @Override public int hashCode() {
+    return Hash.listHash( Hash.<A>anyHash() ).hash( this );
+  }
 
-    /**
-     * Obtain a string representation of this list using the toString implementations of the members.  Uses Show.listShow with F2 argument and may
-     * not be very performant.
-     *
-     * @return a String representation of the list
-     */
-    @Override public String toString() {
-        return Show.listShow( Show.<A>anyShow() ).show( this ).foldLeft( new F2<String, Character, String>() {
-            @Override public String f( final String s, final Character c ) {
-                return s + c;
-            }
-        }, "" );
-    }
+  /**
+   * Obtain a string representation of this list using the toString implementations of the members.  Uses Show.listShow with F2 argument and may
+   * not be very performant.
+   *
+   * @return a String representation of the list
+   */
+  @Override public String toString() {
+    return Show.listShow( Show.<A>anyShow() ).show( this ).foldLeft( new F2<String, Character, String>() {
+      @Override public String f( final String s, final Character c ) {
+        return s + c;
+      }
+    }, "" );
+  }
 }

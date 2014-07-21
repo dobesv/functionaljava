@@ -12,6 +12,8 @@ import static fj.function.Booleans.not;
 
 import java.util.Iterator;
 
+import org.eclipse.jdt.annotation.NonNull;
+
 import fj.F;
 import fj.F2;
 import fj.Function;
@@ -130,6 +132,7 @@ public abstract class Set<A> implements Iterable<A> {
    *         (2) A new set with the given function applied to the first set element
    *         that was equal to the given element.
    */
+  @NonNull
   public final P2<Boolean, Set<A>> update(final A a, final F<A, A> f) {
     return isEmpty()
         ? P.p(false, this)
@@ -170,6 +173,7 @@ public abstract class Set<A> implements Iterable<A> {
    * @param ord An order for the type of elements.
    * @return the empty set.
    */
+  @NonNull
   public static <A> Set<A> empty(final Ord<A> ord) {
     return new Empty<A>(ord);
   }
@@ -180,6 +184,7 @@ public abstract class Set<A> implements Iterable<A> {
    * @param x An element to check for membership in this set.
    * @return true if the given element is a member of this set.
    */
+  @NonNull
   public final boolean member(final A x) {
     return !isEmpty() && (this.ord.isLessThan(x, head()) && l().member(x) || this.ord.eq(head(), x) || r().member(x));
   }
@@ -190,6 +195,7 @@ public abstract class Set<A> implements Iterable<A> {
    *
    * @return A function that returns true if the given element if a member of the given set.
    */
+  @NonNull
   public static <A> F<Set<A>, F<A, Boolean>> member() {
     return curry(new F2<Set<A>, A, Boolean>() {
       @Override
@@ -205,6 +211,7 @@ public abstract class Set<A> implements Iterable<A> {
    * @param x An element to insert into this set.
    * @return A new set with the given element inserted.
    */
+  @NonNull
   public final Set<A> insert(final A x) {
     return ins(x).makeBlack();
   }
@@ -214,6 +221,7 @@ public abstract class Set<A> implements Iterable<A> {
    *
    * @return A function that inserts a given element into a given set.
    */
+  @NonNull
   public static <A> F<A, F<Set<A>, Set<A>>> insert() {
     return curry(new F2<A, Set<A>, Set<A>>() {
       @Override
@@ -223,6 +231,7 @@ public abstract class Set<A> implements Iterable<A> {
     });
   }
 
+  @NonNull
   private Set<A> ins(final A x) {
     return isEmpty()
         ? new Tree<A>(this.ord, Color.R, empty(this.ord), x, empty(this.ord))
@@ -233,6 +242,7 @@ public abstract class Set<A> implements Iterable<A> {
                     : balance(this.ord, color(), l(), head(), r().ins(x));
   }
 
+  @NonNull
   private Set<A> makeBlack() {
     return new Tree<A>(this.ord, Color.B, l(), head(), r());
   }
@@ -344,6 +354,7 @@ public abstract class Set<A> implements Iterable<A> {
    * @param s A set to add to this set.
    * @return A new set containing all elements of both sets.
    */
+  @NonNull
   public final Set<A> union(final Set<A> s) {
     if(s.isEmpty()) return this;
     if(isEmpty()) return s;
@@ -373,6 +384,7 @@ public abstract class Set<A> implements Iterable<A> {
    * @param f The predicate function to filter on.
    * @return A new set whose elements all match the given predicate.
    */
+  @NonNull
   public final Set<A> filter(final F<A, Boolean> f) {
     return iterableSet(this.ord, toStream().filter(f));
   }
@@ -546,4 +558,17 @@ public abstract class Set<A> implements Iterable<A> {
     return s;
   }
 
+  @Override
+  public String toString() {
+    final StringBuffer sb = new StringBuffer();
+    sb.append("Set(");
+    boolean first = true;
+    for(final A elt : this) {
+      if(first) first = false;
+      else sb.append(", ");
+      sb.append(elt.toString());
+    }
+    sb.append(")");
+    return sb.toString();
+  }
 }

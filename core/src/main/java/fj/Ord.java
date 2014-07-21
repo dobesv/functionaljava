@@ -5,6 +5,8 @@ import static fj.Function.curry;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import org.eclipse.jdt.annotation.NonNull;
+
 import fj.data.Array;
 import fj.data.Either;
 import fj.data.List;
@@ -498,6 +500,7 @@ public final class Ord<A> {
    * @param oa Order across the elements of the list.
    * @return An order instance for the {@link List} type.
    */
+  @NonNull
   public static <A> Ord<List<A>> listOrd(final Ord<A> oa) {
     return new Ord<List<A>>(new F<List<A>, F<List<A>, Ordering>>() {
       @Override
@@ -525,6 +528,7 @@ public final class Ord<A> {
    * @param oa Order across the elements of the non-empty list.
    * @return An order instance for the {@link NonEmptyList} type.
    */
+  @NonNull
   public static <A> Ord<NonEmptyList<A>> nonEmptyListOrd(final Ord<A> oa) {
     return listOrd(oa).comap(NonEmptyList.<A>toList_());
   }
@@ -535,6 +539,7 @@ public final class Ord<A> {
    * @param oa Order across the elements of the stream.
    * @return An order instance for the {@link Stream} type.
    */
+  @NonNull
   public static <A> Ord<Stream<A>> streamOrd(final Ord<A> oa) {
     return new Ord<Stream<A>>(new F<Stream<A>, F<Stream<A>, Ordering>>() {
       @Override
@@ -562,6 +567,7 @@ public final class Ord<A> {
    * @param oa Order across the elements of the array.
    * @return An order instance for the {@link Array} type.
    */
+  @NonNull
   public static <A> Ord<Array<A>> arrayOrd(final Ord<A> oa) {
     return new Ord<Array<A>>(new F<Array<A>, F<Array<A>, Ordering>>() {
       @Override
@@ -595,6 +601,7 @@ public final class Ord<A> {
    * @param oa Order across the elements of the set.
    * @return An order instance for the {@link Set} type.
    */
+  @NonNull
   public static <A> Ord<Set<A>> setOrd(final Ord<A> oa) {
     return streamOrd(oa).comap(new F<Set<A>, Stream<A>>() {
       @Override
@@ -620,6 +627,7 @@ public final class Ord<A> {
    * @param oa Order across the produced type.
    * @return An order instance for a product-1.
    */
+  @NonNull
   public static <A> Ord<P1<A>> p1Ord(final Ord<A> oa) {
     return oa.comap(P1.<A>__1());
   }
@@ -632,6 +640,7 @@ public final class Ord<A> {
    * @param ob An order instance for the second factor.
    * @return An order instance for a product-2, with the first factor considered most significant.
    */
+  @NonNull
   public static <A, B> Ord<P2<A, B>> p2Ord(final Ord<A> oa, final Ord<B> ob) {
     return ord(curry(new F2<P2<A, B>, P2<A, B>, Ordering>() {
       @Override
@@ -649,6 +658,7 @@ public final class Ord<A> {
    * @param oc An order instance for the third factor.
    * @return An order instance for a product-3, with the first factor considered most significant.
    */
+  @NonNull
   public static <A, B, C> Ord<P3<A, B, C>> p3Ord(final Ord<A> oa, final Ord<B> ob, final Ord<C> oc) {
     return ord(curry(new F2<P3<A, B, C>, P3<A, B, C>, Ordering>() {
       @Override
@@ -671,6 +681,7 @@ public final class Ord<A> {
    *
    * @return An order instance for the <code>Comparable</code> interface.
    */
+  @NonNull
   public static <A extends Comparable<A>> Ord<A> comparableOrd() {
     return ord(new F<A, F<A, Ordering>>() {
       @Override
@@ -694,6 +705,7 @@ public final class Ord<A> {
    * @return An order instance that is based on {@link Object#hashCode()}.
    * @see #hashEqualsOrd()
    */
+  @NonNull
   public static <A> Ord<A> hashOrd() {
     return Ord.<A> ord(new F<A, F<A, Ordering>>() {
       @Override

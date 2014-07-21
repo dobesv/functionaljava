@@ -37,6 +37,7 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    * @param keyOrd An order for the keys of the tree map.
    * @return an empty TreeMap with the given key order.
    */
+  @NonNull
   public static <K, V> TreeMap<K, V> empty(final Ord<K> keyOrd) {
     return new TreeMap<K, V>(Set.empty(TreeMap.<K, Option<V>>ord(keyOrd)));
   }

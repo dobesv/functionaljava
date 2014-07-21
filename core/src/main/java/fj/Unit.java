@@ -1,5 +1,7 @@
 package fj;
 
+import org.eclipse.jdt.annotation.NonNull;
+
 /**
  * The unit type which has only one value.
  *
@@ -17,6 +19,7 @@ public final class Unit {
    *
    * @return The only value of the unit type.
    */
+  @NonNull
   public static Unit unit() {
     return u;
   }
