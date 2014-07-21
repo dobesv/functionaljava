@@ -57,6 +57,7 @@ public abstract class List<A> implements Iterable<A> {
    * @return A iterator for this list.
    */
   @Override
+  @NonNull
   public final Iterator<A> iterator() {
     return toCollection().iterator();
   }
@@ -73,6 +74,7 @@ public abstract class List<A> implements Iterable<A> {
    *
    * @return The list without the first element or fails for the empty list.
    */
+  @NonNull
   public abstract List<A> tail();
 
   /**
@@ -139,6 +141,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param as The argument to return if this list is empty.
    * @return The tail of this list if there is one or the given argument if this list is empty.
    */
+  @NonNull
   public final List<A> orTail(final P1<List<A>> as) {
     return isEmpty() ? as._1() : tail();
   }
@@ -149,6 +152,7 @@ public abstract class List<A> implements Iterable<A> {
    *
    * @return An option projection of this list.
    */
+  @NonNull
   public final Option<A> toOption() {
     return isEmpty() ? Option.<A>none() : some(head());
   }
@@ -160,6 +164,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param x The value to return in left if this list is empty.
    * @return An either projection of this list.
    */
+  @NonNull
   public final <X> Either<X, A> toEither(final P1<X> x) {
     return isEmpty() ? Either.<X, A>left(x._1()) : Either.<X, A>right(head());
   }
@@ -169,6 +174,7 @@ public abstract class List<A> implements Iterable<A> {
    *
    * @return A stream projection of this list.
    */
+  @NonNull
   public final Stream<A> toStream() {
     final Stream<A> nil = Stream.nil();
     return foldRight(new F<A, F<Stream<A>, Stream<A>>>() {
@@ -190,6 +196,7 @@ public abstract class List<A> implements Iterable<A> {
    * @return A array projection of this list.
    */
   @SuppressWarnings({"unchecked"})
+  @NonNull
   public final Array<A> toArray() {
     final Object[] a = new Object[length()];
     List<A> x = this;
@@ -208,6 +215,7 @@ public abstract class List<A> implements Iterable<A> {
    * @return A array projection of this list.
    */
   @SuppressWarnings({"unchecked", "UnnecessaryFullyQualifiedName"})
+  @NonNull
   public final Array<A> toArray(final Class<A[]> c) {
     final A[] a = (A[]) java.lang.reflect.Array.newInstance(c.getComponentType(), length());
     List<A> x = this;
