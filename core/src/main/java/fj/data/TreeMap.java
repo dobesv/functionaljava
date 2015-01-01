@@ -242,4 +242,20 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
     return new TreeMap<K, W>(this.tree.map(TreeMap.<K, Option<W>>ord(o), g));
   }
 
+  /**
+   * Copy all pairs from x into this map, replacing any existing keys in this map.
+   *
+   * @param TreeMap to copy from
+   * @return A new treemap with all the pairs from x and non-conflicting pairs from this map.
+   */
+  @NonNull
+  public TreeMap<K, V> setAll(
+      @NonNull TreeMap<K, V> x) {
+    TreeMap<K, V> result = this;
+    for(P2<K,V> p : x) {
+      result = result.set(p._1(), p._2());
+    }
+    return result;
+  }
+
 }

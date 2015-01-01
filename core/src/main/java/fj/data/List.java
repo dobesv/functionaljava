@@ -115,6 +115,15 @@ public abstract class List<A> implements Iterable<A> {
   }
 
   /**
+   * Returns <code>true</code> if the list has length one, <code>false</code> otherwise.
+   *
+   * @return <code>true</code> if the list has length one, <code>false</code> otherwise.
+   */
+  public final boolean isSingle() {
+    return isNotEmpty() && tail().isEmpty();
+  }
+
+  /**
    * Performs a reduction on this list using the given arguments.
    *
    * @param nil  The value to return if this list is empty.
@@ -217,9 +226,10 @@ public abstract class List<A> implements Iterable<A> {
   @SuppressWarnings({"unchecked", "UnnecessaryFullyQualifiedName"})
   @NonNull
   public final Array<A> toArray(final Class<A[]> c) {
-    final A[] a = (A[]) java.lang.reflect.Array.newInstance(c.getComponentType(), length());
+    int len = length();
+    final A[] a = (A[]) java.lang.reflect.Array.newInstance(c.getComponentType(), len);
     List<A> x = this;
-    for (int i = 0; i < length(); i++) {
+    for (int i = 0; i < len; i++) {
       a[i] = x.head();
       x = x.tail();
     }
@@ -235,7 +245,14 @@ public abstract class List<A> implements Iterable<A> {
    */
   @NonNull
   public final A[] array(final Class<A[]> c) {
-    return toArray(c).array(c);
+    int len = length();
+    final A[] a = (A[]) java.lang.reflect.Array.newInstance(c.getComponentType(), len);
+    List<A> x = this;
+    for (int i = 0; i < len; i++) {
+      a[i] = x.head();
+      x = x.tail();
+    }
+    return a;
   }
 
   /**
@@ -734,6 +751,7 @@ public abstract class List<A> implements Iterable<A> {
    *
    * @return A new list that is the reverse of this one.
    */
+  @NonNull
   public final List<A> reverse() {
     return foldLeft(new F<List<A>, F<A, List<A>>>() {
       @Override
@@ -1014,6 +1032,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param a The element to append to this list.
    * @return A new list with the given element appended.
    */
+  @NonNull
   public final List<A> snoc(final A a) {
     return fromList(this).snoc(a).toList();
   }
@@ -1354,7 +1373,7 @@ public abstract class List<A> implements Iterable<A> {
       }
     }
   }
-  
+
   /**
    * Projects an immutable collection of this list.
    *
@@ -1524,6 +1543,7 @@ public abstract class List<A> implements Iterable<A> {
    *
    * @return A function that determines whether a given list is empty.
    */
+  @NonNull
   public static <A> F<List<A>, Boolean> isEmpty_() {
     return new F<List<A>, Boolean>() {
       @Override
@@ -1538,6 +1558,7 @@ public abstract class List<A> implements Iterable<A> {
    *
    * @return A function that determines whether a given list is not empty.
    */
+  @NonNull
   public static <A> F<List<A>, Boolean> isNotEmpty_() {
     return new F<List<A>, Boolean>() {
       @Override
@@ -1553,6 +1574,7 @@ public abstract class List<A> implements Iterable<A> {
    * @param o The list of lists to join.
    * @return A new list that is the join of the given lists.
    */
+  @NonNull
   public static <A> List<A> join(final List<List<A>> o) {
     final F<List<A>, List<A>> id = identity();
     return o.bind(id);
@@ -1563,6 +1585,7 @@ public abstract class List<A> implements Iterable<A> {
    *
    * @return A function that joins a list of lists using a bind operation.
    */
+  @NonNull
   public static <A> F<List<List<A>>, List<A>> join() {
     return new F<List<List<A>>, List<A>>() {
       @Override

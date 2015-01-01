@@ -115,6 +115,7 @@ public final class P {
    * @param c An element.
    * @return The product-3.
    */
+  @NonNull
   public static <A, B, C> P3<A, B, C> p(final A a, final B b, final C c) {
     return new P3<A, B, C>() {
       @Override
@@ -139,6 +140,7 @@ public final class P {
    *
    * @return A function that puts an element in a product-4.
    */
+  @NonNull
   public static <A, B, C, D> F<A, F<B, F<C, F<D, P4<A, B, C, D>>>>> p4() {
     return new F<A, F<B, F<C, F<D, P4<A, B, C, D>>>>>() {
       @Override
@@ -172,6 +174,7 @@ public final class P {
    * @param d An element.
    * @return The product-4.
    */
+  @NonNull
   public static <A, B, C, D> P4<A, B, C, D> p(final A a, final B b, final C c, final D d) {
     return new P4<A, B, C, D>() {
       @Override
@@ -201,6 +204,7 @@ public final class P {
    *
    * @return A function that puts an element in a product-5.
    */
+  @NonNull
   public static <A, B, C, D, E> F<A, F<B, F<C, F<D, F<E, P5<A, B, C, D, E>>>>>> p5() {
     return new F<A, F<B, F<C, F<D, F<E, P5<A, B, C, D, E>>>>>>() {
       @Override
@@ -240,6 +244,7 @@ public final class P {
    * @param e An element.
    * @return The product-5.
    */
+  @NonNull
   public static <A, B, C, D, E> P5<A, B, C, D, E> p(final A a, final B b, final C c, final D d, final E e) {
     return new P5<A, B, C, D, E>() {
       @Override
@@ -274,6 +279,7 @@ public final class P {
    *
    * @return A function that puts an element in a product-6.
    */
+  @NonNull
   public static <A, B, C, D, E, F$> F<A, F<B, F<C, F<D, F<E, F<F$, P6<A, B, C, D, E, F$>>>>>>> p6() {
     return new F<A, F<B, F<C, F<D, F<E, F<F$, P6<A, B, C, D, E, F$>>>>>>>() {
       @Override
@@ -319,6 +325,7 @@ public final class P {
    * @param f An element.
    * @return The product-6.
    */
+  @NonNull
   public static <A, B, C, D, E, F$> P6<A, B, C, D, E, F$> p(final A a, final B b, final C c, final D d, final E e, final F$ f) {
     return new P6<A, B, C, D, E, F$>() {
       @Override
