@@ -1,10 +1,6 @@
 package fj;
 
-import static fj.Function.compose;
-import static fj.Function.constant;
-import static fj.Function.curry;
-import static fj.Function.identity;
-import static fj.Function.join;
+import static fj.Function.*;
 import fj.data.List;
 import fj.data.Stream;
 
@@ -28,11 +24,6 @@ public abstract class P2<A, B> {
    */
   public abstract B _2();
 
-  @Override
-  public String toString() {
-    return "P2("+_1()+", "+_2()+")";
-  }
-
   /**
    * Swaps the elements around in this product.
    *
@@ -40,12 +31,10 @@ public abstract class P2<A, B> {
    */
   public final P2<B, A> swap() {
     return new P2<B, A>() {
-      @Override
       public B _1() {
         return P2.this._2();
       }
 
-      @Override
       public A _2() {
         return P2.this._1();
       }
@@ -60,12 +49,10 @@ public abstract class P2<A, B> {
    */
   public final <X> P2<X, B> map1(final F<A, X> f) {
     return new P2<X, B>() {
-      @Override
       public X _1() {
         return f.f(P2.this._1());
       }
 
-      @Override
       public B _2() {
         return P2.this._2();
       }
@@ -80,12 +67,10 @@ public abstract class P2<A, B> {
    */
   public final <X> P2<A, X> map2(final F<B, X> f) {
     return new P2<A, X>() {
-      @Override
       public A _1() {
         return P2.this._1();
       }
 
-      @Override
       public X _2() {
         return f.f(P2.this._2());
       }
@@ -117,12 +102,10 @@ public abstract class P2<A, B> {
   public final <C> P2<C, B> cobind(final F<P2<A, B>, C> k) {
     return new P2<C, B>() {
 
-      @Override
       public C _1() {
         return k.f(P2.this);
       }
 
-      @Override
       public B _2() {
         return P2.this._2();
       }
@@ -171,13 +154,12 @@ public abstract class P2<A, B> {
    */
   public final <C> Stream<C> sequenceW(final Stream<F<P2<A, B>, C>> fs) {
     return fs.isEmpty()
-        ? Stream.<C>nil()
-            : Stream.cons(fs.head().f(this), new P1<Stream<C>>() {
-              @Override
-              public Stream<C> _1() {
-                return sequenceW(fs.tail()._1());
-              }
-            });
+           ? Stream.<C>nil()
+           : Stream.cons(fs.head().f(this), new P1<Stream<C>>() {
+             public Stream<C> _1() {
+               return sequenceW(fs.tail()._1());
+             }
+           });
   }
 
   /**
@@ -186,7 +168,7 @@ public abstract class P2<A, B> {
    * @return the 1-product projection over the first element.
    */
   public final P1<A> _1_() {
-    return P2.<A, B>__1().lazy().f(this);
+    return F1Functions.lazy(P2.<A, B>__1()).f(this);
   }
 
   /**
@@ -195,30 +177,29 @@ public abstract class P2<A, B> {
    * @return the 1-product projection over the second element.
    */
   public final P1<B> _2_() {
-    return P2.<A, B>__2().lazy().f(this);
+    return F1Functions.lazy(P2.<A, B>__2()).f(this);
   }
 
-  /**
-   * Provides a memoising P2 that remembers its values.
-   *
-   * @return A P2 that calls this P2 once for any given element and remembers the value for subsequent calls.
-   */
-  public final P2<A, B> memo() {
-    return new P2<A, B>() {
-      private final P1<A> a = _1_().memo();
-      private final P1<B> b = _2_().memo();
+    /**
+     * Provides a memoising P2 that remembers its values.
+     *
+     * @return A P2 that calls this P2 once for any given element and remembers the value for subsequent calls.
+     */
+    public final P2<A, B> memo() {
+        P2<A, B> self = this;
+        return new P2<A, B>() {
+            private final P1<A> a = P1.memo(u -> self._1());
+            private final P1<B> b = P1.memo(u -> self._2());
 
-      @Override
-      public A _1() {
-        return this.a._1();
-      }
+            public A _1() {
+                return a._1();
+            }
 
-      @Override
-      public B _2() {
-        return this.b._1();
-      }
-    };
-  }
+            public B _2() {
+                return b._1();
+            }
+        };
+    }
 
   /**
    * A first-class version of the split function.
@@ -229,7 +210,6 @@ public abstract class P2<A, B> {
    */
   public static <A, B, C, D> F<P2<A, B>, P2<C, D>> split_(final F<A, C> f, final F<B, D> g) {
     return new F<P2<A, B>, P2<C, D>>() {
-      @Override
       public P2<C, D> f(final P2<A, B> p) {
         return p.split(f, g);
       }
@@ -244,7 +224,6 @@ public abstract class P2<A, B> {
    */
   public static <A, B, X> F<P2<A, B>, P2<X, B>> map1_(final F<A, X> f) {
     return new F<P2<A, B>, P2<X, B>>() {
-      @Override
       public P2<X, B> f(final P2<A, B> p) {
         return p.map1(f);
       }
@@ -259,7 +238,6 @@ public abstract class P2<A, B> {
    */
   public static <A, B, X> F<P2<A, B>, P2<A, X>> map2_(final F<B, X> f) {
     return new F<P2<A, B>, P2<A, X>>() {
-      @Override
       public P2<A, X> f(final P2<A, B> p) {
         return p.map2(f);
       }
@@ -296,7 +274,6 @@ public abstract class P2<A, B> {
    */
   public static <A, B> F<P2<A, B>, P2<B, A>> swap_() {
     return new F<P2<A, B>, P2<B, A>>() {
-      @Override
       public P2<B, A> f(final P2<A, B> p) {
         return p.swap();
       }
@@ -310,7 +287,6 @@ public abstract class P2<A, B> {
    */
   public static <A, B> F<P2<A, B>, A> __1() {
     return new F<P2<A, B>, A>() {
-      @Override
       public A f(final P2<A, B> p) {
         return p._1();
       }
@@ -324,7 +300,6 @@ public abstract class P2<A, B> {
    */
   public static <A, B> F<P2<A, B>, B> __2() {
     return new F<P2<A, B>, B>() {
-      @Override
       public B f(final P2<A, B> p) {
         return p._2();
       }
@@ -339,7 +314,6 @@ public abstract class P2<A, B> {
    */
   public static <A, B, C> F<P2<A, B>, C> tuple(final F<A, F<B, C>> f) {
     return new F<P2<A, B>, C>() {
-      @Override
       public C f(final P2<A, B> p) {
         return f.f(p._1()).f(p._2());
       }
@@ -364,11 +338,14 @@ public abstract class P2<A, B> {
    */
   public static <A, B, C> F2<A, B, C> untuple(final F<P2<A, B>, C> f) {
     return new F2<A, B, C>() {
-      @Override
       public C f(final A a, final B b) {
         return f.f(P.p(a, b));
       }
     };
   }
+
+	public String toString() {
+		return Show.p2Show(Show.<A>anyShow(), Show.<B>anyShow()).showS(this);
+	}
 
 }

@@ -24,10 +24,10 @@ import java.util.NoSuchElementException;
 
 import org.eclipse.jdt.annotation.NonNull;
 
-import fj.Effect;
 import fj.Equal;
 import fj.F;
 import fj.F2;
+import fj.F2Functions;
 import fj.F3;
 import fj.Function;
 import fj.Hash;
@@ -40,6 +40,7 @@ import fj.P2;
 import fj.Show;
 import fj.Unit;
 import fj.control.Trampoline;
+import fj.function.Effect1;
 
 /**
  * Provides an in-memory, immutable, singly linked list.
@@ -315,9 +316,9 @@ public abstract class List<A> implements Iterable<A> {
    *
    * @param f The side-effect to perform for the given element.
    */
-  public final void foreach(final Effect<A> f) {
+  public final void foreachDoEffect(final Effect1<A> f) {
     for (List<A> xs = this; xs.isNotEmpty(); xs = xs.tail()) {
-      f.e(xs.head());
+      f.f(xs.head());
     }
   }
 
@@ -448,7 +449,8 @@ public abstract class List<A> implements Iterable<A> {
   }
 
   /**
-   * Groups elements according to the given equality implementation.
+   * Groups elements according to the given equality implementation by longest
+   * sequence of equal elements.
    *
    * @param e The equality implementation for the elements.
    * @return A list of grouped elements.
@@ -689,7 +691,7 @@ public abstract class List<A> implements Iterable<A> {
     return Trampoline.suspend(new P1<Trampoline<B>>() {
       @Override
       public Trampoline<B> _1() {
-        return isEmpty() ? Trampoline.pure(b) : tail().foldRightC(f, b).map(f.f(head()));
+        return isEmpty() ? Trampoline.pure(b) : tail().foldRightC(f, b).map(F2Functions.f(f, head()));
       }
     });
   }
@@ -1307,6 +1309,111 @@ public abstract class List<A> implements Iterable<A> {
   }
 
   /**
+   * Groups the elements of this list by a given keyFunction into a {@link TreeMap}.
+   * The ordering of the keys is determined by {@link fj.Ord#hashOrd()}.
+   *
+   * @param keyFunction The function to select the keys for the map.
+   * @return A TreeMap containing the keys with the accumulated list of matched elements.
+   */
+  public final <B> TreeMap<B, List<A>> groupBy(final F<A, B> keyFunction) {
+    return groupBy(keyFunction, Ord.hashOrd());
+  }
+
+  /**
+   * Groups the elements of this list by a given keyFunction into a {@link TreeMap}.
+   *
+   * @param keyFunction The function to select the keys for the map.
+   * @param keyOrd An order for the keys of the tree map.
+   * @return A TreeMap containing the keys with the accumulated list of matched elements.
+   */
+  public final <B> TreeMap<B, List<A>> groupBy(final F<A, B> keyFunction, final Ord<B> keyOrd) {
+    return groupBy(keyFunction, Function.identity(), keyOrd);
+  }
+
+  /**
+   * Groups the elements of this list by a given keyFunction into a {@link TreeMap} and transforms
+   * the matching elements with the given valueFunction. The ordering of the keys is determined by
+   * {@link fj.Ord#hashOrd()}.
+   *
+   * @param keyFunction The function to select the keys for the map.
+   * @param valueFunction The function to apply on each matching value.
+   * @return A TreeMap containing the keys with the accumulated list of matched and mapped elements.
+   */
+  public final <B, C> TreeMap<B, List<C>> groupBy(
+      final F<A, B> keyFunction,
+      final F<A, C> valueFunction) {
+    return this.groupBy(keyFunction, valueFunction, Ord.hashOrd());
+  }
+
+  /**
+   * Groups the elements of this list by a given keyFunction into a {@link TreeMap} and transforms
+   * the matching elements with the given valueFunction. The ordering of the keys is determined by
+   * the keyOrd parameter.
+   *
+   * @param keyFunction The function to select the keys for the map.
+   * @param valueFunction The function to apply on each matching value.
+   * @param keyOrd An order for the keys of the tree map.
+   * @return A TreeMap containing the keys with the accumulated list of matched and mapped elements.
+   */
+  public final <B, C> TreeMap<B, List<C>> groupBy(
+      final F<A, B> keyFunction,
+      final F<A, C> valueFunction,
+      final Ord<B> keyOrd) {
+    return this.groupBy(keyFunction, valueFunction, List.<C>nil(), List::cons, keyOrd);
+  }
+
+  /**
+   * Groups the elements of this list by a given keyFunction into a {@link TreeMap} and transforms
+   * the matching elements with the given valueFunction. The ordering of the keys is determined by
+   * the keyOrd parameter.
+   *
+   * @param keyFunction The function to select the keys for the map.
+   * @param valueFunction The function to apply on each matching value.
+   * @param monoid A monoid, which defines the accumulator for the values and the zero value.
+   * @param keyOrd An order for the keys of the tree map.
+   * @return A TreeMap containing the keys with the accumulated list of matched and mapped elements.
+   */
+  public final <B, C> TreeMap<B, C> groupBy(
+      final F<A, B> keyFunction,
+      final F<A, C> valueFunction,
+      final Monoid<C> monoid,
+      final Ord<B> keyOrd) {
+    return groupBy(keyFunction, valueFunction, monoid.zero(),
+        Function.uncurryF2(monoid.sum()), keyOrd);
+  }
+
+  /**
+   * Groups the elements of this list by a given keyFunction, applies the valueFunction and
+   * accumulates the mapped values with the given grouping accumulator function on the grouping
+   * identity.
+   *
+   * @param keyFunction The function to select the keys.
+   * @param valueFunction The function to apply on each element.
+   * @param groupingIdentity The identity, or start value, for the grouping.
+   * @param groupingAcc The accumulator to apply on each matching value.
+   * @param keyOrd An order for the keys of the tree map.
+   * @return A TreeMap containing the keys with the accumulated result of matched and mapped
+   * elements.
+   */
+  public final <B, C, D> TreeMap<B, D> groupBy(
+      final F<A, B> keyFunction,
+      final F<A, C> valueFunction,
+      final D groupingIdentity,
+      final F2<C, D, D> groupingAcc,
+      final Ord<B> keyOrd) {
+    return this.foldLeft(map -> element -> {
+          final B key = keyFunction.f(element);
+          final C value = valueFunction.f(element);
+          return map.set(key, map.get(key)
+              .map(existing -> groupingAcc.f(value, existing))
+              .orSome(groupingAcc.f(value, groupingIdentity)));
+        }, TreeMap.<B, D>empty(keyOrd)
+    );
+  }
+
+
+
+  /**
    * Returns whether or not all elements in the list are equal according to the given equality test.
    *
    * @param eq The equality test.
@@ -1494,6 +1601,10 @@ public abstract class List<A> implements Iterable<A> {
         };
       }
     };
+  }
+
+  public static <A> F2<A, List<A>, List<A>> cons_() {
+      return (a, listA) -> cons(a, listA);
   }
 
   /**

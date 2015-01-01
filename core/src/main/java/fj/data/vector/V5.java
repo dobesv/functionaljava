@@ -218,7 +218,7 @@ public final class V5<A> implements Iterable<A> {
    * @return A new vector after zipping the given vector of functions over this vector.
    */
   public <B> V5<B> apply(final V5<F<A, B>> vf) {
-    return new V5<B>(P1.<A, B>apply(head, vf.head()), tail.apply(vf.tail()));
+    return new V5<B>(head.<B>apply(vf.head()), tail.apply(vf.tail()));
   }
 
   /**

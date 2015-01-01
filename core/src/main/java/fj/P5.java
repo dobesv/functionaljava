@@ -197,7 +197,7 @@ public abstract class P5<A, B, C, D, E> {
    * @return the 1-product projection over the first element.
    */
   public final P1<A> _1_() {
-    return P5.<A, B, C, D, E>__1().lazy().f(this);
+    return F1Functions.lazy(P5.<A, B, C, D, E>__1()).f(this);
   }
 
   /**
@@ -206,7 +206,7 @@ public abstract class P5<A, B, C, D, E> {
    * @return the 1-product projection over the second element.
    */
   public final P1<B> _2_() {
-    return P5.<A, B, C, D, E>__2().lazy().f(this);
+    return F1Functions.lazy(P5.<A, B, C, D, E>__2()).f(this);
   }
 
   /**
@@ -215,7 +215,7 @@ public abstract class P5<A, B, C, D, E> {
    * @return the 1-product projection over the third element.
    */
   public final P1<C> _3_() {
-    return P5.<A, B, C, D, E>__3().lazy().f(this);
+    return F1Functions.lazy(P5.<A, B, C, D, E>__3()).f(this);
   }
 
   /**
@@ -224,7 +224,7 @@ public abstract class P5<A, B, C, D, E> {
    * @return the 1-product projection over the fourth element.
    */
   public final P1<D> _4_() {
-    return P5.<A, B, C, D, E>__4().lazy().f(this);
+    return F1Functions.lazy(P5.<A, B, C, D, E>__4()).f(this);
   }
 
   /**
@@ -233,7 +233,7 @@ public abstract class P5<A, B, C, D, E> {
    * @return the 1-product projection over the fifth element.
    */
   public final P1<E> _5_() {
-    return P5.<A, B, C, D, E>__5().lazy().f(this);
+    return F1Functions.lazy(P5.<A, B, C, D, E>__5()).f(this);
   }
 
   /**
@@ -242,12 +242,13 @@ public abstract class P5<A, B, C, D, E> {
    * @return A P5 that calls this P5 once for any given element and remembers the value for subsequent calls.
    */
   public final P5<A, B, C, D, E> memo() {
+      P5<A, B, C, D, E> self = this;
     return new P5<A, B, C, D, E>() {
-      private final P1<A> a = _1_().memo();
-      private final P1<B> b = _2_().memo();
-      private final P1<C> c = _3_().memo();
-      private final P1<D> d = _4_().memo();
-      private final P1<E> e = _5_().memo();
+      private final P1<A> a = P1.memo(u -> self._1());
+      private final P1<B> b = P1.memo(u -> self._2());
+      private final P1<C> c = P1.memo(u -> self._3());
+      private final P1<D> d = P1.memo(u -> self._4());
+      private final P1<E> e = P1.memo(u -> self._5());
 
       public A _1() {
         return a._1();
@@ -335,4 +336,10 @@ public abstract class P5<A, B, C, D, E> {
       }
     };
   }
+
+	public String toString() {
+		return Show.p5Show(Show.<A>anyShow(), Show.<B>anyShow(), Show.<C>anyShow(), Show.<D>anyShow(), Show.<E>anyShow()).showS(this);
+	}
+
+
 }

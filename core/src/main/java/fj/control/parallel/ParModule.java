@@ -1,16 +1,7 @@
 package fj.control.parallel;
 
-import fj.Effect;
-import fj.F;
-import fj.F2;
-import fj.Function;
-import fj.Monoid;
-import fj.P;
-import fj.P1;
-import fj.P2;
-import fj.P3;
-import fj.P4;
-import fj.Unit;
+import fj.*;
+
 import static fj.P.p;
 import static fj.Function.curry;
 import static fj.Function.uncurryF2;
@@ -24,6 +15,8 @@ import fj.data.Stream;
 import fj.data.Tree;
 import fj.data.TreeZipper;
 import fj.data.Zipper;
+import fj.function.Effect1;
+
 import static fj.data.Option.some;
 import static fj.data.Stream.iterableStream;
 
@@ -78,7 +71,7 @@ public final class ParModule {
    *         that can be claimed in the future.
    */
   public <A, B> F<A, Promise<B>> promise(final F<A, B> f) {
-    return f.promiseK(strategy);
+    return F1Functions.promiseK(f, strategy);
   }
 
   /**
@@ -103,7 +96,7 @@ public final class ParModule {
    *         that can be claimed in the future.
    */
   public <A, B, C> F2<A, B, Promise<C>> promise(final F2<A, B, C> f) {
-    return P2.untuple(f.tuple().promiseK(strategy));
+    return P2.untuple(F1Functions.promiseK(F2Functions.tuple(f), strategy));
   }
 
 
@@ -114,7 +107,7 @@ public final class ParModule {
    * @param e The effect that the actor should have on its messages.
    * @return A concurrent actor that does not guarantee ordering of its messages.
    */
-  public <A> Actor<A> effect(final Effect<A> e) {
+  public <A> Actor<A> effect(final Effect1<A> e) {
     return Actor.actor(strategy, e);
   }
 
@@ -124,9 +117,9 @@ public final class ParModule {
    *
    * @return A function that takes an effect and returns a concurrent effect.
    */
-  public <A> F<Effect<A>, Actor<A>> effect() {
-    return new F<Effect<A>, Actor<A>>() {
-      public Actor<A> f(final Effect<A> effect) {
+  public <A> F<Effect1<A>, Actor<A>> effect() {
+    return new F<Effect1<A>, Actor<A>>() {
+      public Actor<A> f(final Effect1<A> effect) {
         return effect(effect);
       }
     };
@@ -138,7 +131,7 @@ public final class ParModule {
    * @param e The effect that the actor should have on its messages.
    * @return A concurrent actor that is guaranteed to process its messages in order.
    */
-  public <A> Actor<A> actor(final Effect<A> e) {
+  public <A> Actor<A> actor(final Effect1<A> e) {
     return Actor.queueActor(strategy, e);
   }
 
@@ -147,9 +140,9 @@ public final class ParModule {
    *
    * @return A function that takes an effect and returns an actor that processes messages in some order.
    */
-  public <A> F<Effect<A>, Actor<A>> actor() {
-    return new F<Effect<A>, Actor<A>>() {
-      public Actor<A> f(final Effect<A> effect) {
+  public <A> F<Effect1<A>, Actor<A>> actor() {
+    return new F<Effect1<A>, Actor<A>>() {
+      public Actor<A> f(final Effect1<A> effect) {
         return actor(effect);
       }
     };

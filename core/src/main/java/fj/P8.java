@@ -406,7 +406,7 @@ public abstract class P8<A, B, C, D, E, F, G, H> {
    * @return the 1-product projection over the first element.
    */
   public final P1<A> _1_() {
-    return P8.<A, B, C, D, E, F, G, H>__1().lazy().f(this);
+    return F1Functions.lazy(P8.<A, B, C, D, E, F, G, H>__1()).f(this);
   }
 
   /**
@@ -415,7 +415,7 @@ public abstract class P8<A, B, C, D, E, F, G, H> {
    * @return the 1-product projection over the second element.
    */
   public final P1<B> _2_() {
-    return P8.<A, B, C, D, E, F, G, H>__2().lazy().f(this);
+    return F1Functions.lazy(P8.<A, B, C, D, E, F, G, H>__2()).f(this);
   }
 
   /**
@@ -424,7 +424,7 @@ public abstract class P8<A, B, C, D, E, F, G, H> {
    * @return the 1-product projection over the third element.
    */
   public final P1<C> _3_() {
-    return P8.<A, B, C, D, E, F, G, H>__3().lazy().f(this);
+    return F1Functions.lazy(P8.<A, B, C, D, E, F, G, H>__3()).f(this);
   }
 
   /**
@@ -433,7 +433,7 @@ public abstract class P8<A, B, C, D, E, F, G, H> {
    * @return the 1-product projection over the fourth element.
    */
   public final P1<D> _4_() {
-    return P8.<A, B, C, D, E, F, G, H>__4().lazy().f(this);
+    return F1Functions.lazy(P8.<A, B, C, D, E, F, G, H>__4()).f(this);
   }
 
   /**
@@ -442,7 +442,7 @@ public abstract class P8<A, B, C, D, E, F, G, H> {
    * @return the 1-product projection over the fifth element.
    */
   public final P1<E> _5_() {
-    return P8.<A, B, C, D, E, F, G, H>__5().lazy().f(this);
+    return F1Functions.lazy(P8.<A, B, C, D, E, F, G, H>__5()).f(this);
   }
 
   /**
@@ -451,7 +451,7 @@ public abstract class P8<A, B, C, D, E, F, G, H> {
    * @return the 1-product projection over the sixth element.
    */
   public final P1<F> _6_() {
-    return P8.<A, B, C, D, E, F, G, H>__6().lazy().f(this);
+    return F1Functions.lazy(P8.<A, B, C, D, E, F, G, H>__6()).f(this);
   }
 
   /**
@@ -460,7 +460,7 @@ public abstract class P8<A, B, C, D, E, F, G, H> {
    * @return the 1-product projection over the seventh element.
    */
   public final P1<G> _7_() {
-    return P8.<A, B, C, D, E, F, G, H>__7().lazy().f(this);
+    return F1Functions.lazy(P8.<A, B, C, D, E, F, G, H>__7()).f(this);
   }
 
   /**
@@ -469,7 +469,7 @@ public abstract class P8<A, B, C, D, E, F, G, H> {
    * @return the 1-product projection over the eighth element.
    */
   public final P1<H> _8_() {
-    return P8.<A, B, C, D, E, F, G, H>__8().lazy().f(this);
+    return F1Functions.lazy(P8.<A, B, C, D, E, F, G, H>__8()).f(this);
   }
 
   /**
@@ -478,15 +478,16 @@ public abstract class P8<A, B, C, D, E, F, G, H> {
    * @return A P8 that calls this P8 once for any given element and remembers the value for subsequent calls.
    */
   public final P8<A, B, C, D, E, F, G, H> memo() {
+      P8<A, B, C, D, E, F, G, H> self = this;
     return new P8<A, B, C, D, E, F, G, H>() {
-      private final P1<A> a = _1_().memo();
-      private final P1<B> b = _2_().memo();
-      private final P1<C> c = _3_().memo();
-      private final P1<D> d = _4_().memo();
-      private final P1<E> e = _5_().memo();
-      private final P1<F> f = _6_().memo();
-      private final P1<G> g = _7_().memo();
-      private final P1<H> h = _8_().memo();
+      private final P1<A> a = P1.memo(u -> self._1());
+      private final P1<B> b = P1.memo(u -> self._2());
+      private final P1<C> c = P1.memo(u -> self._3());
+      private final P1<D> d = P1.memo(u -> self._4());
+      private final P1<E> e = P1.memo(u -> self._5());
+      private final P1<F> f = P1.memo(u -> self._6());
+      private final P1<G> g = P1.memo(u -> self._7());
+      private final P1<H> h = P1.memo(u -> self._8());
 
       public A _1() {
         return a._1();
@@ -626,4 +627,9 @@ public abstract class P8<A, B, C, D, E, F, G, H> {
       }
     };
   }
+
+	public String toString() {
+		return Show.p8Show(Show.<A>anyShow(), Show.<B>anyShow(), Show.<C>anyShow(), Show.<D>anyShow(), Show.<E>anyShow(), Show.<F>anyShow(), Show.<G>anyShow(), Show.<H>anyShow()).showS(this);
+	}
+
 }

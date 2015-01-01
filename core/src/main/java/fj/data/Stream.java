@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import fj.Effect;
 import fj.Equal;
 import fj.F;
 import fj.F2;
@@ -38,6 +37,7 @@ import fj.P2;
 import fj.Unit;
 import fj.control.parallel.Promise;
 import fj.control.parallel.Strategy;
+import fj.function.Effect1;
 
 /**
  * A lazy (not yet evaluated), immutable, singly linked list.
@@ -298,9 +298,9 @@ public abstract class Stream<A> implements Iterable<A> {
    *
    * @param f The side-effect to perform for the given element.
    */
-  public final void foreach(final Effect<A> f) {
+  public final void foreachDoEffect(final Effect1<A> f) {
     for (Stream<A> xs = this; xs.isNotEmpty(); xs = xs.tail()._1())
-      f.e(xs.head());
+      f.f(xs.head());
   }
 
   /**

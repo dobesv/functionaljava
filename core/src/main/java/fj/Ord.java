@@ -81,7 +81,7 @@ public final class Ord<A> {
    * @return A new ord.
    */
   public <B> Ord<B> comap(final F<B, A> f) {
-    return ord(f.<Ordering>andThen().o(this.f).o(f));
+    return ord(F1Functions.o(F1Functions.o(F1Functions.<B, A, Ordering>andThen(f), this.f), f));
   }
 
   /**
@@ -722,11 +722,11 @@ public final class Ord<A> {
   }
 
   /**
-   * An order instance that uses {@link Object#hashCode()} and {@link Object#equals()} for computing
+   * An order instance that uses {@link Object#hashCode()} and {@link Object#equals} for computing
    * the order and equality. First the hashCode is compared, if this is equal, objects are compared
-   * using {@link Object#equals()}.
+   * using {@link Object#equals}.
    *
-   * @return An order instance that is based on {@link Object#hashCode()} and {@link Object#equals()}.
+   * @return An order instance that is based on {@link Object#hashCode()} and {@link Object#equals}.
    */
   public static <A> Ord<A> hashEqualsOrd() {
     return Ord.<A> ord(new F<A, F<A, Ordering>>() {

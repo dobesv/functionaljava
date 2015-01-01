@@ -252,7 +252,7 @@ public final class V7<A> implements Iterable<A> {
    * @return A new vector after zipping the given vector of functions over this vector.
    */
   public <B> V7<B> apply(final V7<F<A, B>> vf) {
-    return new V7<B>(P1.<A, B>apply(head, vf.head()), tail.apply(vf.tail()));
+    return new V7<B>(head.<B>apply(vf.head()), tail.apply(vf.tail()));
   }
 
   /**

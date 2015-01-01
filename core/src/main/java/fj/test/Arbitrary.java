@@ -1,6 +1,5 @@
 package fj.test;
 
-import fj.Effect;
 import fj.F;
 import fj.F2;
 import fj.F3;
@@ -20,17 +19,18 @@ import fj.P5;
 import fj.P6;
 import fj.P7;
 import fj.P8;
-import fj.data.Array;
-import fj.data.Either;
+import fj.data.*;
+import fj.LcgRng;
+
 import static fj.data.Either.left;
 import static fj.data.Either.right;
 import static fj.data.Enumerator.charEnumerator;
-import fj.data.List;
 import static fj.data.List.asString;
 import static fj.data.List.list;
-import fj.data.Option;
 import static fj.data.Option.some;
-import fj.data.Stream;
+
+import fj.function.Effect1;
+
 import static fj.data.Stream.range;
 import static fj.test.Gen.choose;
 import static fj.test.Gen.elements;
@@ -123,6 +123,24 @@ public final class Arbitrary<A> {
       }
     }));
   }
+
+    public static <A, B> Arbitrary<Reader<A, B>> arbReader(Coarbitrary<A> aa, Arbitrary<B> ab) {
+        return arbitrary(Arbitrary.arbF(aa, ab).gen.map(f -> Reader.unit(f)));
+    }
+
+    /**
+     * An arbitrary for state.
+     */
+    public static <S, A> Arbitrary<State<S, A>> arbState(Arbitrary<S> as, Coarbitrary<S> cs, Arbitrary<A> aa) {
+        return arbitrary(arbF(cs, arbP2(as, aa)).gen.map(f -> State.unit(f)));
+    }
+
+    /**
+     * An arbitrary for the LcgRng.
+     */
+    public static <A> Arbitrary<LcgRng> arbLcgRng() {
+        return arbitrary(Arbitrary.arbLong.gen.map(l -> new LcgRng(l)));
+    }
 
   /**
    * An arbitrary for functions.
@@ -785,10 +803,10 @@ public final class Arbitrary<A> {
       arbitrary(arbList(arbBoolean).gen.map(new F<List<Boolean>, BitSet>() {
         public BitSet f(final List<Boolean> bs) {
           final BitSet s = new BitSet(bs.length());
-          bs.zipIndex().foreach(new Effect<P2<Boolean, Integer>>() {
-            public void e(final P2<Boolean, Integer> bi) {
-              s.set(bi._2(), bi._1());
-            }
+          bs.zipIndex().foreachDoEffect(new Effect1<P2<Boolean, Integer>>() {
+              public void f(final P2<Boolean, Integer> bi) {
+                  s.set(bi._2(), bi._1());
+              }
           });
           return s;
         }
@@ -916,10 +934,10 @@ public final class Arbitrary<A> {
           public Hashtable<K, V> f(final List<V> vs) {
             final Hashtable<K, V> t = new Hashtable<K, V>();
 
-            ks.zip(vs).foreach(new Effect<P2<K, V>>() {
-              public void e(final P2<K, V> kv) {
-                t.put(kv._1(), kv._2());
-              }
+            ks.zip(vs).foreachDoEffect(new Effect1<P2<K, V>>() {
+                public void f(final P2<K, V> kv) {
+                    t.put(kv._1(), kv._2());
+                }
             });
 
             return t;

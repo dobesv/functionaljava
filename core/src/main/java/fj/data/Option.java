@@ -22,7 +22,6 @@ import java.util.Iterator;
 
 import org.eclipse.jdt.annotation.NonNull;
 
-import fj.Effect;
 import fj.F;
 import fj.F2;
 import fj.P;
@@ -36,6 +35,7 @@ import fj.P7;
 import fj.P8;
 import fj.Show;
 import fj.Unit;
+import fj.function.Effect1;
 
 /**
  * An optional value that may be none (no value) or some (a value). This type is a replacement for
@@ -233,9 +233,9 @@ public abstract class Option<A> implements Iterable<A> {
    *
    * @param f The side-effect to perform for the given element.
    */
-  public final void foreach(final Effect<A> f) {
+  public final void foreachDoEffect(final Effect1<A> f) {
     if (isSome())
-      f.e(some());
+      f.f(some());
   }
 
   /**
@@ -489,6 +489,10 @@ public abstract class Option<A> implements Iterable<A> {
     return isSome() ? Either.<X, A>right(some()) : Either.<X, A>left(x);
   }
 
+    public final <X> Validation<X, A> toValidation(final X x) {
+        return Validation.validation(toEither(x));
+    }
+
   /**
    * A first-class version of the toEither method.
    *
@@ -681,6 +685,14 @@ public abstract class Option<A> implements Iterable<A> {
   @NonNull
   public static <T> Option<T> some(final T t) {
     return new Some<T>(t);
+  }
+
+  public static <T> F<T, Option<T>> none_() {
+    return new F<T, Option<T>>() {
+      public Option<T> f(final T t) {
+        return none();
+      }
+    };
   }
 
   /**

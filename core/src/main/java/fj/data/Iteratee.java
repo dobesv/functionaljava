@@ -1,6 +1,7 @@
 package fj.data;
 
 import fj.F;
+import fj.F1Functions;
 import fj.Function;
 import fj.P;
 import fj.P1;
@@ -81,7 +82,7 @@ public final class Iteratee {
     public final A run() {
       final F<IterV<E, A>, Option<A>> runCont =
         new F<IterV<E, A>, Option<A>>() {
-          final F<P2<A, Input<E>>, Option<A>> done = P2.<A, Input<E>>__1().andThen(Option.<A>some_());
+          final F<P2<A, Input<E>>, Option<A>> done = F1Functions.andThen(P2.<A, Input<E>>__1(), Option.<A>some_());
           final F<F<Input<E>, IterV<E, A>>, Option<A>> cont = Function.constant(Option.<A>none());
 
           @Override
@@ -160,7 +161,7 @@ public final class Iteratee {
               new P1<F<E, IterV<E, Integer>>>() {
                 @Override
                 public F<E, IterV<E, Integer>> _1() {
-                  return P.p(cont(step.f(acc + 1))).<E>constant();
+                  return P.p(cont(step.f(acc + 1))).constant();
                 }
               };
             final P1<IterV<E, Integer>> eof =
@@ -198,7 +199,7 @@ public final class Iteratee {
             new P1<F<E, IterV<E, Unit>>>() {
               @Override
               public F<E, IterV<E, Unit>> _1() {
-                return P.p(IterV.<E>drop(n - 1)).<E>constant();
+                return P.p(IterV.<E>drop(n - 1)).constant();
               }
             };
           final P1<IterV<E, Unit>> eof =

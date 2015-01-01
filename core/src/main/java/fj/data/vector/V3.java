@@ -143,7 +143,7 @@ public final class V3<A> implements Iterable<A> {
    * @return A new vector after zipping the given vector of functions over this vector.
    */
   public <B> V3<B> apply(final V3<F<A, B>> vf) {
-    return new V3<B>(P1.<A, B>apply(head, vf.head()), tail.apply(vf.tail()));
+    return new V3<B>(head.<B>apply(vf.head()), tail.apply(vf.tail()));
   }
 
   /**

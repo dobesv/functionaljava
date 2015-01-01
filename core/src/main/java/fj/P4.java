@@ -144,7 +144,7 @@ public abstract class P4<A, B, C, D> {
    * @return the 1-product projection over the first element.
    */
   public final P1<A> _1_() {
-    return P4.<A, B, C, D>__1().lazy().f(this);
+    return F1Functions.lazy(P4.<A, B, C, D>__1()).f(this);
   }
 
   /**
@@ -153,7 +153,7 @@ public abstract class P4<A, B, C, D> {
    * @return the 1-product projection over the second element.
    */
   public final P1<B> _2_() {
-    return P4.<A, B, C, D>__2().lazy().f(this);
+    return F1Functions.lazy(P4.<A, B, C, D>__2()).f(this);
   }
 
   /**
@@ -162,7 +162,7 @@ public abstract class P4<A, B, C, D> {
    * @return the 1-product projection over the third element.
    */
   public final P1<C> _3_() {
-    return P4.<A, B, C, D>__3().lazy().f(this);
+    return F1Functions.lazy(P4.<A, B, C, D>__3()).f(this);
   }
 
   /**
@@ -171,7 +171,7 @@ public abstract class P4<A, B, C, D> {
    * @return the 1-product projection over the fourth element.
    */
   public final P1<D> _4_() {
-    return P4.<A, B, C, D>__4().lazy().f(this);
+    return F1Functions.lazy(P4.<A, B, C, D>__4()).f(this);
   }
 
   /**
@@ -180,11 +180,12 @@ public abstract class P4<A, B, C, D> {
    * @return A P4 that calls this P4 once for any given element and remembers the value for subsequent calls.
    */
   public final P4<A, B, C, D> memo() {
+      P4<A, B, C, D> self = this;
     return new P4<A, B, C, D>() {
-      private final P1<A> a = _1_().memo();
-      private final P1<B> b = _2_().memo();
-      private final P1<C> c = _3_().memo();
-      private final P1<D> d = _4_().memo();
+      private final P1<A> a = P1.memo(u -> self._1());
+      private final P1<B> b = P1.memo(u -> self._2());
+      private final P1<C> c = P1.memo(u -> self._3());
+      private final P1<D> d = P1.memo(u -> self._4());
 
       public A _1() {
         return a._1();
@@ -256,4 +257,9 @@ public abstract class P4<A, B, C, D> {
       }
     };
   }
+
+	public String toString() {
+		return Show.p4Show(Show.<A>anyShow(), Show.<B>anyShow(), Show.<C>anyShow(), Show.<D>anyShow()).showS(this);
+	}
+
 }

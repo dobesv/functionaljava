@@ -1,15 +1,6 @@
 package fj.data;
 
-import fj.Equal;
-import fj.F;
-import fj.F2;
-import fj.F4;
-import fj.P;
-import fj.P1;
-import fj.P2;
-import fj.P3;
-import fj.P4;
-import fj.Show;
+import fj.*;
 import fj.function.Booleans;
 
 import java.util.Iterator;
@@ -276,9 +267,10 @@ public final class TreeZipper<A> implements Iterable<TreeZipper<A>> {
         new F2<Stream<Tree<A>>, Stream<Tree<A>>, Option<P3<Stream<Tree<A>>, Tree<A>, Stream<Tree<A>>>>>() {
           public Option<P3<Stream<Tree<A>>, Tree<A>, Stream<Tree<A>>>> f(final Stream<Tree<A>> acc,
                                                                          final Stream<Tree<A>> xs) {
-            return p.f(xs.head()) ? some(P.p(acc, xs.head(), xs.tail()._1()))
-                                  : xs.isNotEmpty() ? f(acc.cons(xs.head()), xs.tail()._1())
-                                                    : Option.<P3<Stream<Tree<A>>, Tree<A>, Stream<Tree<A>>>>none();
+            return xs.isNotEmpty()
+                     ? p.f(xs.head()) ? some(P.p(acc, xs.head(), xs.tail()._1()))
+                                      : f(acc.cons(xs.head()), xs.tail()._1())
+                     : Option.<P3<Stream<Tree<A>>, Tree<A>, Stream<Tree<A>>>>none();
           }
         };
 
@@ -730,7 +722,7 @@ public final class TreeZipper<A> implements Iterable<TreeZipper<A>> {
    * @return The result of applying the given function over this TreeZipper and the given TreeZipper, location-wise.
    */
   public <B, C> TreeZipper<C> zipWith(final TreeZipper<B> bs, final F2<A, B, C> f) {
-    return f.zipTreeZipperM().f(this, bs);
+    return F2Functions.zipTreeZipperM(f).f(this, bs);
   }
 
   /**

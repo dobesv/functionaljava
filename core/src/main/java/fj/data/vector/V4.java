@@ -201,7 +201,7 @@ public final class V4<A> implements Iterable<A> {
    * @return A new vector after zipping the given vector of functions over this vector.
    */
   public <B> V4<B> apply(final V4<F<A, B>> vf) {
-    return new V4<B>(P1.<A, B>apply(head, vf.head()), tail.apply(vf.tail()));
+    return new V4<B>(head.<B>apply(vf.head()), tail.apply(vf.tail()));
   }
 
   /**

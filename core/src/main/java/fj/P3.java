@@ -99,7 +99,7 @@ public abstract class P3<A, B, C> {
    * @return the 1-product projection over the first element.
    */
   public final P1<A> _1_() {
-    return P3.<A, B, C>__1().lazy().f(this);
+    return F1Functions.lazy(P3.<A, B, C>__1()).f(this);
   }
 
   /**
@@ -108,7 +108,7 @@ public abstract class P3<A, B, C> {
    * @return the 1-product projection over the second element.
    */
   public final P1<B> _2_() {
-    return P3.<A, B, C>__2().lazy().f(this);
+    return F1Functions.lazy(P3.<A, B, C>__2()).f(this);
   }
 
   /**
@@ -117,7 +117,7 @@ public abstract class P3<A, B, C> {
    * @return the 1-product projection over the third element.
    */
   public final P1<C> _3_() {
-    return P3.<A, B, C>__3().lazy().f(this);
+    return F1Functions.lazy(P3.<A, B, C>__3()).f(this);
   }
 
   /**
@@ -126,10 +126,11 @@ public abstract class P3<A, B, C> {
    * @return A P3 that calls this P3 once for any given element and remembers the value for subsequent calls.
    */
   public final P3<A, B, C> memo() {
+      P3<A, B, C> self = this;
     return new P3<A, B, C>() {
-      private final P1<A> a = _1_().memo();
-      private final P1<B> b = _2_().memo();
-      private final P1<C> c = _3_().memo();
+      private final P1<A> a = P1.memo(u -> self._1());
+      private final P1<B> b = P1.memo(u -> self._2());
+      private final P1<C> c = P1.memo(u -> self._3());
 
       public A _1() {
         return a._1();
@@ -183,4 +184,10 @@ public abstract class P3<A, B, C> {
       }
     };
   }
+
+	public String toString() {
+		return Show.p3Show(Show.<A>anyShow(), Show.<B>anyShow(), Show.<C>anyShow()).showS(this);
+	}
+
+
 }

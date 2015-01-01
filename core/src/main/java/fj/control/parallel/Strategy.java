@@ -8,11 +8,10 @@ import fj.P;
 import fj.P1;
 import static fj.Function.compose;
 import static fj.Function.curry;
-import static fj.P1.fmap;
-import static fj.P1.sequence;
 import fj.data.Java;
 import fj.data.List;
 import fj.data.Array;
+import fj.function.Effect1;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
@@ -107,7 +106,7 @@ public final class Strategy<A> {
    * @return A list of the values of the product-1s in the argument.
    */
   public P1<List<A>> parList(final List<P1<A>> ps) {
-    return sequence(ps.map(f()));
+    return P1.sequence(ps.map(f()));
   }
 
   /**
@@ -118,7 +117,7 @@ public final class Strategy<A> {
    * @return A product-1 that returns the list with all of its elements transformed by the given function.
    */
   public <B> P1<List<A>> parMap(final F<B, A> f, final List<B> bs) {
-    return sequence(bs.map(concurry(f)));
+    return P1.sequence(bs.map(concurry(f)));
   }
 
   /**
@@ -129,7 +128,7 @@ public final class Strategy<A> {
    * @return A product-1 that returns the array with all of its elements transformed by the given function.
    */
   public <B> P1<Array<A>> parMap(final F<B, A> f, final Array<B> bs) {
-    return sequence(bs.map(concurry(f)));
+    return P1.sequence(bs.map(concurry(f)));
   }
 
   /**
@@ -257,7 +256,7 @@ public final class Strategy<A> {
   public static <A, B> P1<List<B>> parFlatMap(final Strategy<List<B>> s,
                                               final F<A, List<B>> f,
                                               final List<A> as) {
-    return fmap(List.<B>join()).f(s.parMap(f, as));
+    return P1.fmap(List.<B>join()).f(s.parMap(f, as));
   }
 
   /**
@@ -271,7 +270,7 @@ public final class Strategy<A> {
   public static <A, B> P1<Array<B>> parFlatMap(final Strategy<Array<B>> s,
                                                final F<A, Array<B>> f,
                                                final Array<A> as) {
-    return fmap(Array.<B>join()).f(s.parMap(f, as));
+    return P1.fmap(Array.<B>join()).f(s.parMap(f, as));
   }
 
   /**
@@ -286,7 +285,7 @@ public final class Strategy<A> {
   public static <A> P1<List<A>> parListChunk(final Strategy<List<A>> s,
                                              final int chunkLength,
                                              final List<P1<A>> as) {
-    return fmap(List.<A>join()).f(s.parList(as.partition(chunkLength).map(P1.<A>sequenceList())));
+    return P1.fmap(List.<A>join()).f(s.parList(as.partition(chunkLength).map(P1.<A>sequenceList())));
   }
 
   /**
@@ -302,7 +301,7 @@ public final class Strategy<A> {
    * @return The list of the results of calling the given function on corresponding elements of the given lists.
    */
   public <B, C> P1<List<A>> parZipWith(final F2<B, C, A> f, final List<B> bs, final List<C> cs) {
-    return sequence(bs.zipWith(cs, concurry(f)));
+    return P1.sequence(bs.zipWith(cs, concurry(f)));
   }
 
   /**
@@ -318,7 +317,7 @@ public final class Strategy<A> {
    * @return The array of the results of calling the given function on corresponding elements of the given arrays.
    */
   public <B, C> P1<Array<A>> parZipWith(final F2<B, C, A> f, final Array<B> bs, final Array<C> cs) {
-    return sequence(bs.zipWith(cs, concurry(f)));
+    return P1.sequence(bs.zipWith(cs, concurry(f)));
   }
 
   /**
@@ -390,9 +389,9 @@ public final class Strategy<A> {
    *
    * @return An effect, which, given a Future, waits for it to obtain a value, discarding the value.
    */
-  public static <A> Effect<Future<A>> discard() {
-    return new Effect<Future<A>>() {
-      public void e(final Future<A> a) {
+  public static <A> Effect1<Future<A>> discard() {
+    return new Effect1<Future<A>>() {
+      public void f(final Future<A> a) {
         Strategy.<A>obtain().f(a)._1();
       }
     };
@@ -507,7 +506,7 @@ public final class Strategy<A> {
    * @param e The effect that should handle errors.
    * @return A strategy that captures any runtime errors with a side-effect.
    */
-  public Strategy<A> errorStrategy(final Effect<Error> e) {
+  public Strategy<A> errorStrategy(final Effect1<Error> e) {
     return errorStrategy(this, e);
   }
 
@@ -519,7 +518,7 @@ public final class Strategy<A> {
    * @param e The effect that should handle errors.
    * @return A strategy that captures any runtime errors with a side-effect.
    */
-  public static <A> Strategy<A> errorStrategy(final Strategy<A> s, final Effect<Error> e) {
+  public static <A> Strategy<A> errorStrategy(final Strategy<A> s, final Effect1<Error> e) {
     return s.comap(new F<P1<A>, P1<A>>() {
       public P1<A> f(final P1<A> a) {
         return new P1<A>() {
@@ -528,7 +527,7 @@ public final class Strategy<A> {
               return a._1();
             } catch (Throwable t) {
               final Error error = new Error(t);
-              e.e(error);
+              e.f(error);
               throw error;
             }
           }
