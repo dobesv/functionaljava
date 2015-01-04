@@ -691,8 +691,7 @@ public final class Ord<A> {
         return new F<A, Ordering>() {
           @Override
           public Ordering f(final A a2) {
-            final int x = a1.compareTo(a2);
-            return x < 0 ? Ordering.LT : x == 0 ? Ordering.EQ : Ordering.GT;
+            return Ordering.fromInt(a1.compareTo(a2));
           }
         };
       }
