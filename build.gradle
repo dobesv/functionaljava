@@ -61,14 +61,6 @@ subprojects {
         }
     }
 
-    repositories {
-        mavenCentral()
-		maven {
-			url sonatypeRepositoryUrl
-		}
-
-	}
-
     apply from: "$rootDir/lib.gradle"
     apply plugin: "maven"
     apply plugin: "java"
@@ -84,6 +76,20 @@ subprojects {
     task sourcesJar(type: Jar) {
         from sourceSets.main.allSource
         classifier = 'sources'
+    }
+
+    repositories {
+        mavenCentral()
+        maven {
+            url sonatypeRepositoryUrl
+        }
+        maven {
+            url "https://repo.eclipse.org/content/repositories/eclipse-releases"
+        }
+    }
+
+    dependencies {
+        compile 'org.eclipse.jdt:org.eclipse.jdt.annotation:2.0.0.v20140415-1436'
     }
 
     artifacts {
