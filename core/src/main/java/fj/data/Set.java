@@ -160,7 +160,6 @@ public abstract class Set<A> implements Iterable<A> {
    * @param ord An order for the type of elements.
    * @return the empty set.
    */
-  @NonNull
   public static <A> Set<A> empty(final Ord<A> ord) {
     return new Empty<A>(ord);
   }

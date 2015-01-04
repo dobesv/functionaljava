@@ -559,7 +559,6 @@ public abstract class Option<A> implements Iterable<A> {
    * @param c The class type of the array to return.
    * @return An array from this optional value.
    */
-  @NonNull
   public final A[] array(final Class<A[]> c) {
     return toArray(c).array(c);
   }
@@ -685,7 +684,6 @@ public abstract class Option<A> implements Iterable<A> {
    * @param t The value for the returned optional value.
    * @return An optional value that has a value of the given argument.
    */
-  @NonNull
   public static <T> Option<T> some(final T t) {
     return new Some<T>(t);
   }
@@ -703,7 +701,6 @@ public abstract class Option<A> implements Iterable<A> {
    *
    * @return An optional value that has no value.
    */
-  @NonNull
   public static <T> Option<T> none() {
     return new None<T>();
   }

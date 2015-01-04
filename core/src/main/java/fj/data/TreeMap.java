@@ -38,7 +38,6 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    * @param keyOrd An order for the keys of the tree map.
    * @return an empty TreeMap with the given key order.
    */
-  @NonNull
   public static <K, V> TreeMap<K, V> empty(final Ord<K> keyOrd) {
     return new TreeMap<K, V>(Set.empty(TreeMap.<K, Option<V>>ord(keyOrd)));
   }
@@ -49,7 +48,6 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    * @param k The key to look up in the tree map.
    * @return A potential value for the given key.
    */
-  @NonNull
   public Option<V> get(final K k) {
     final Option<P2<K, Option<V>>> x = this.tree.split(P.p(k, Option.<V>none()))._2();
     return x.bind(P2.<K, Option<V>>__2());
@@ -63,7 +61,6 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    * @param v The value to insert.
    * @return A new tree map with the given value mapped to the given key.
    */
-  @NonNull
   public TreeMap<K, V> set(final K k, final V v) {
       return new TreeMap<K, V>(tree.insert(P.p(k, Option.some(v))));
   }
@@ -74,7 +71,6 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    * @param k The key to delete from this tree map.
    * @return A new tree map with the entry corresponding to the given key removed.
    */
-  @NonNull
   public TreeMap<K, V> delete(final K k) {
     return new TreeMap<K, V>(this.tree.delete(P.p(k, Option.<V>none())));
   }
@@ -247,9 +243,7 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    * @param TreeMap to copy from
    * @return A new treemap with all the pairs from x and non-conflicting pairs from this map.
    */
-  @NonNull
-  public TreeMap<K, V> setAll(
-      @NonNull TreeMap<K, V> x) {
+  public TreeMap<K, V> setAll(TreeMap<K, V> x) {
     TreeMap<K, V> result = this;
     for(P2<K,V> p : x) {
       result = result.set(p._1(), p._2());
