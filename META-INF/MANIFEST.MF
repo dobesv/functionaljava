@@ -3,8 +3,6 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Functional Java
 Bundle-SymbolicName: org.functionaljava
 Bundle-Version: 4.3.0.qualifier
-Bundle-ClassPath: functionaljava.jar,
- sbt-launch-0.7.4.jar
 Export-Package: fj,
  fj.control,
  fj.control.db,
