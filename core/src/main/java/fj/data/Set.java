@@ -1,23 +1,28 @@
 package fj.data;
 
+import static fj.Function.compose;
+import static fj.Function.constant;
+import static fj.Function.curry;
+import static fj.Function.identity;
+import static fj.Ordering.GT;
+import static fj.Ordering.LT;
+import static fj.data.Either.right;
+import static fj.data.Option.some;
+import static fj.function.Booleans.not;
+
+import java.util.Iterator;
+
+import org.eclipse.jdt.annotation.NonNull;
+
 import fj.F;
 import fj.F2;
 import fj.Function;
 import fj.Monoid;
 import fj.Ord;
+import fj.Ordering;
 import fj.P;
 import fj.P2;
 import fj.P3;
-import static fj.Function.*;
-import static fj.data.Either.right;
-import static fj.data.Option.some;
-import static fj.function.Booleans.not;
-
-import fj.Ordering;
-import static fj.Ordering.GT;
-import static fj.Ordering.LT;
-
-import java.util.Iterator;
 
 /**
  * Provides an in-memory, immutable set, implemented as a red/black tree.
@@ -155,6 +160,7 @@ public abstract class Set<A> implements Iterable<A> {
    * @param ord An order for the type of elements.
    * @return the empty set.
    */
+  @NonNull
   public static <A> Set<A> empty(final Ord<A> ord) {
     return new Empty<A>(ord);
   }
@@ -318,10 +324,10 @@ public abstract class Set<A> implements Iterable<A> {
   public final Set<A> union(final Set<A> s) {
     return iterableSet(ord, s.toStream().append(toStream()));
   }
-  
+
   /**
    * A first class function for {@link #union(Set)}.
-   * 
+   *
    * @return A function that adds all the elements of one set to another set.
    * @see #union(Set)
    */
@@ -376,10 +382,10 @@ public abstract class Set<A> implements Iterable<A> {
   public final Set<A> intersect(final Set<A> s) {
     return filter(Set.<A>member().f(s));
   }
-  
+
   /**
    * A first class function for {@link #intersect(Set)}.
-   * 
+   *
    * @return A function that intersects two given sets.
    * @see #intersect(Set)
    */
@@ -400,10 +406,10 @@ public abstract class Set<A> implements Iterable<A> {
   public final Set<A> minus(final Set<A> s) {
     return filter(compose(not, Set.<A>member().f(s)));
   }
-  
+
   /**
    * A first class function for {@link #minus(Set)}.
-   * 
+   *
    * @return A function that removes all elements of one set from another set.
    * @see #minus(Set)
    */

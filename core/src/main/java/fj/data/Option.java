@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 import fj.F;
 import fj.F2;
@@ -558,6 +559,7 @@ public abstract class Option<A> implements Iterable<A> {
    * @param c The class type of the array to return.
    * @return An array from this optional value.
    */
+  @NonNull
   public final A[] array(final Class<A[]> c) {
     return toArray(c).array(c);
   }
@@ -568,6 +570,7 @@ public abstract class Option<A> implements Iterable<A> {
    *
    * @return This optional value or <code>null</code> if there is no value.
    */
+  @Nullable
   public final A toNull() {
     return orSome((A) null);
   }

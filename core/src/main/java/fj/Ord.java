@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.NonNullByDefault;
 
 import fj.data.Array;
 import fj.data.Either;
@@ -681,6 +682,7 @@ public final class Ord<A> {
    *
    * @return An order instance for the <code>Comparable</code> interface.
    */
+  @NonNullByDefault({})
   @NonNull
   public static <A extends Comparable<A>> Ord<A> comparableOrd() {
     return ord(new F<A, F<A, Ordering>>() {
