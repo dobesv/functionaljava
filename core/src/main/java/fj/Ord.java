@@ -679,8 +679,7 @@ public final class Ord<A> {
    *
    * @return An order instance for the <code>Comparable</code> interface.
    */
-  @NonNullByDefault({PARAMETER, RETURN_TYPE, FIELD})
-  public static <A extends Comparable<A>> Ord<A> comparableOrd() {
+  public static <@NonNull A extends Comparable<@NonNull A>> Ord<@NonNull A> comparableOrd() {
     return ord(new F<A, F<A, Ordering>>() {
       @Override
       public F<A, Ordering> f(final A a1) {

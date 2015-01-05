@@ -57,6 +57,7 @@ public abstract class List<A> implements Iterable<A> {
    *
    * @return A iterator for this list.
    */
+  @SuppressWarnings("null")
   @Override
   public final Iterator<A> iterator() {
     return toCollection().iterator();
@@ -160,7 +161,7 @@ public abstract class List<A> implements Iterable<A> {
    * @return An option projection of this list.
    */
   public final Option<A> toOption() {
-    return isEmpty() ? Option.<A>none() : some(head());
+    return isEmpty() ? Option.none() : some(head());
   }
 
   /**
@@ -171,7 +172,7 @@ public abstract class List<A> implements Iterable<A> {
    * @return An either projection of this list.
    */
   public final <X> Either<X, A> toEither(final P1<X> x) {
-    return isEmpty() ? Either.<X, A>left(x._1()) : Either.<X, A>right(head());
+    return isEmpty() ? Either.left(x._1()) : Either.right(head());
   }
 
   /**
@@ -836,7 +837,7 @@ public abstract class List<A> implements Iterable<A> {
     return unfold(new F<List<A>, Option<P2<List<A>, List<A>>>>() {
       @Override
       public Option<P2<List<A>, List<A>>> f(final List<A> as) {
-        return as.isEmpty() ? Option.<P2<List<A>, List<A>>>none() : some(as.splitAt(n));
+        return as.isEmpty() ? Option.none() : some(as.splitAt(n));
       }
     }, this);
   }
@@ -1084,7 +1085,7 @@ public abstract class List<A> implements Iterable<A> {
    * @return A list without duplicates according to object equality.
    */
   public final List<A> nub() {
-    return nub(Equal.<A>anyEqual());
+    return nub(Equal.anyEqual());
   }
 
   /**
@@ -1552,7 +1553,8 @@ public abstract class List<A> implements Iterable<A> {
    *
    * @return An empty list.
    */
-  public static <A> List<A> nil() {
+  @SuppressWarnings("unchecked")
+  public static <A> List<@NonNull A> nil() {
     return NIL;
   }
 

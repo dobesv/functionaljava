@@ -619,7 +619,7 @@ public abstract class Option<A> implements Iterable<A> {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
       if (this == obj)
         return true;
       if (obj == null)
@@ -651,7 +651,7 @@ public abstract class Option<A> implements Iterable<A> {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
       if (this == obj)
         return true;
       if (obj == null)
