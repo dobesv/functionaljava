@@ -66,6 +66,7 @@ subprojects {
     apply plugin: "java"
     apply plugin: "signing"
     apply plugin: "eclipse"
+    apply plugin: "osgi"
 
     sourceCompatibility = "1.8"
 
@@ -102,11 +103,40 @@ subprojects {
     jar {
         version project.fjVersion
         manifest {
-            attributes 'Signature-Version': project.fjVersion
+            name = 'Functional Java'
+            instruction 'Signature-Version', project.fjVersion
+            instruction 'Bundle-ActivationPolicy', 'lazy'
+            instruction 'Bundle-Vendor', 'functionaljava.org'
+			if(project.name != "core") {
+				instruction 'Require-Bundle', 'org.functionaljava;bundle-version="'+project.fjBaseVersion+'"'
+			}
         }
     }
 
+    eclipse {
+      project {
+        natures 'org.eclipse.pde.PluginNature'
+        buildCommand 'org.eclipse.pde.ManifestBuilder'
+        buildCommand 'org.eclipse.pde.SchemaBuilder'
+      }
+    }
+
+	// OSGI version of jar dies if the classes folder isn't pre-created
+    task ensureBuildFolder << {
+      file("build/classes/main").mkdirs()
+    }
+    jar.dependsOn ensureBuildFolder
+
+    // Output MANIFEST.MF statically so eclipse can see it for plugin development
+    task eclipsePluginManifest(dependsOn: jar) << {
+      file("META-INF").mkdirs()
+      jar.manifest.writeTo(file("META-INF/MANIFEST.MF"))
+    }
+
+    eclipseClasspath.dependsOn eclipsePluginManifest
+
 }
+
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.0'

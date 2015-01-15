@@ -11,5 +11,6 @@ build
 .classpath
 .project
 .DS_Store
-
+*/META-INF/MANIFEST.MF
+*/bin
 /bin
