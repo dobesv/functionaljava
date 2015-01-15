@@ -1,22 +1,20 @@
 package fj.data;
 
+import fj.F;
+import fj.F1Functions;
+import fj.P;
+import fj.P2;
+import fj.P3;
+import fj.Ord;
+
+import java.util.Iterator;
+import java.util.Map;
+
 import static fj.Function.compose;
 import static fj.Function.flip;
 import static fj.P.p;
 import static fj.data.IterableW.join;
 import static fj.data.List.iterableList;
-
-import java.util.Iterator;
-import java.util.Map;
-
-import org.eclipse.jdt.annotation.NonNull;
-
-import fj.F;
-import fj.F1Functions;
-import fj.Ord;
-import fj.P;
-import fj.P2;
-import fj.P3;
 
 /**
  * An immutable, in-memory map, backed by a red-black tree.
@@ -43,13 +41,39 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
   }
 
   /**
+   * Constructs a tree map from the given elements.
+   *
+   * @param keyOrd An order for the keys of the tree map.
+   * @param p2s The elements to construct the tree map with.
+   * @return a TreeMap with the given elements.
+   */
+  public static <K, V> TreeMap<K, V> treeMap(final Ord<K> keyOrd, final P2<K, V>... p2s) {
+    return treeMap(keyOrd, List.list(p2s));
+  }
+
+  /**
+   * Constructs a tree map from the given elements.
+   *
+   * @param keyOrd An order for the keys of the tree map.
+   * @param list The elements to construct the tree map with.
+   * @return a TreeMap with the given elements.
+   */
+  public static <K, V> TreeMap<K, V> treeMap(final Ord<K> keyOrd, final List<P2<K, V>> list) {
+    TreeMap<K, V> tm = empty(keyOrd);
+    for (final P2<K, V> p2 : list) {
+      tm = tm.set(p2._1(), p2._2());
+    }
+    return tm;
+  }
+
+  /**
    * Returns a potential value that the given key maps to.
    *
    * @param k The key to look up in the tree map.
    * @return A potential value for the given key.
    */
   public Option<V> get(final K k) {
-    final Option<P2<K, Option<V>>> x = this.tree.split(P.p(k, Option.<V>none()))._2();
+    final Option<P2<K, Option<V>>> x = tree.split(P.p(k, Option.<V>none()))._2();
     return x.bind(P2.<K, Option<V>>__2());
   }
 
@@ -72,7 +96,7 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    * @return A new tree map with the entry corresponding to the given key removed.
    */
   public TreeMap<K, V> delete(final K k) {
-    return new TreeMap<K, V>(this.tree.delete(P.p(k, Option.<V>none())));
+    return new TreeMap<K, V>(tree.delete(P.p(k, Option.<V>none())));
   }
 
   /**
@@ -81,7 +105,7 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    * @return The number of entries in this tree map.
    */
   public int size() {
-    return this.tree.size();
+    return tree.size();
   }
 
   /**
@@ -90,7 +114,7 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    * @return <code>true</code> if this tree map has no entries, <code>false</code> otherwise.
    */
   public boolean isEmpty() {
-    return this.tree.isEmpty();
+    return tree.isEmpty();
   }
 
   /**
@@ -99,7 +123,7 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    * @return All values in this tree map.
    */
   public List<V> values() {
-    return iterableList(join(this.tree.toList().map(compose(IterableW.<V, Option<V>>wrap(), P2.<K, Option<V>>__2()))));
+    return iterableList(join(tree.toList().map(compose(IterableW.<V, Option<V>>wrap(), P2.<K, Option<V>>__2()))));
   }
 
   /**
@@ -108,7 +132,7 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    * @return All keys in this tree map.
    */
   public List<K> keys() {
-    return this.tree.toList().map(P2.<K, Option<V>>__1());
+    return tree.toList().map(P2.<K, Option<V>>__1());
   }
 
   /**
@@ -118,7 +142,7 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    * @return <code>true</code> if this tree map contains the given key, <code>false</code> otherwise.
    */
   public boolean contains(final K k) {
-    return this.tree.member(P.p(k, Option.<V>none()));
+    return tree.member(P.p(k, Option.<V>none()));
   }
 
   /**
@@ -127,10 +151,9 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    *
    * @return A iterator for this map's key-value pairs.
    */
-  @Override
   public Iterator<P2<K, V>> iterator() {
-    return join(this.tree.toStream().map(P2.<K, Option<V>, IterableW<V>>map2_(IterableW.<V, Option<V>>wrap())
-        ).map(P2.tuple(compose(IterableW.<V, P2<K, V>>map(), P.<K, V>p2())))).iterator();
+    return join(tree.toStream().map(P2.<K, Option<V>, IterableW<V>>map2_(IterableW.<V, Option<V>>wrap())
+    ).map(P2.tuple(compose(IterableW.<V, P2<K, V>>map(), P.<K, V>p2())))).iterator();
   }
 
   /**
@@ -146,6 +169,9 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
     return m;
   }
 
+  public Stream<P2<K, V>> toStream() {
+    return Stream.iteratorStream(iterator());
+  }
   /**
    * An immutable projection of the given mutable map.
    *
@@ -167,12 +193,7 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    * @return a functional representation of this TreeMap.
    */
   public F<K, Option<V>> get() {
-    return new F<K, Option<V>>() {
-      @Override
-      public Option<V> f(final K k) {
-        return get(k);
-      }
-    };
+    return k -> get(k);
   }
 
   /**
@@ -185,7 +206,7 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    */
   public P2<Boolean, TreeMap<K, V>> update(final K k, final F<V, V> f) {
     final P2<Boolean, Set<P2<K, Option<V>>>> up =
-        this.tree.update(p(k, Option.<V>none()), P2.<K, Option<V>, Option<V>>map2_(Option.<V, V>map().f(f)));
+        tree.update(p(k, Option.<V>none()), P2.<K, Option<V>, Option<V>>map2_(Option.<V, V>map().f(f)));
     return P.p(up._1(), new TreeMap<K, V>(up._2()));
   }
 
@@ -216,11 +237,48 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
    *         key in this map, all the elements in the second set are mapped to keys greater than the given key,
    *         and the optional value is the value associated with the given key if present, otherwise None.
    */
-  public P3<Set<V>, Option<V>, Set<V>> split(final K k) {
-    final F<Set<P2<K, Option<V>>>, Set<V>> getSome = F1Functions.mapSet(F1Functions.o(Option.<V>fromSome(), P2.<K, Option<V>>__2())
-        , tree.ord().comap(F1Functions.o(P.<K, Option<V>>p2().f(k), Option.<V>some_())));
+  public P3<Set<V>, Option<V>, Set<V>> split(Ord<V> ord, final K k) {
+    final F<Set<P2<K, Option<V>>>, Set<V>> getSome = F1Functions.mapSet(F1Functions.o(Option.<V>fromSome(), P2.<K, Option<V>>__2()), ord);
     return tree.split(p(k, Option.<V>none())).map1(getSome).map3(getSome)
         .map2(F1Functions.o(Option.<V>join(), F1Functions.mapOption(P2.<K, Option<V>>__2())));
+  }
+
+  /**
+   * Internal construction of a TreeMap from the given set.
+   * @param ord An order for the keys of the tree map.
+   * @param s The elements to construct the tree map with.
+   * @return a TreeMap with the given elements.
+   */
+  private static <K, V> TreeMap<K, V> treeMap(Ord<K> ord, Set<P2<K, Option<V>>> s) {
+    TreeMap<K, V> empty = TreeMap.<K, V>empty(ord);
+    TreeMap<K, V> tree = s.toList().foldLeft((tm, p2) -> {
+      Option<V> opt = p2._2();
+      if (opt.isSome()) {
+        return tm.set(p2._1(), opt.some());
+      }
+      return tm;
+    }, empty);
+    return tree;
+  }
+
+  /**
+   * Splits this TreeMap at the given key. Returns a triple of:
+   * <ul>
+   * <li>A tree map containing all the values of this map associated with keys less than the given key.</li>
+   * <li>An option of a value mapped to the given key, if it exists in this map, otherwise None.
+   * <li>A tree map containing all the values of this map associated with keys greater than the given key.</li>
+   * </ul>
+   *
+   * @param k A key at which to split this map.
+   * @return Two tree maps and an optional value, where all keys in the first tree map are mapped
+   * to keys less than the given key in this map, all the keys in the second tree map are mapped
+   * to keys greater than the given key, and the optional value is the value associated with the
+   * given key if present, otherwise None.
+   */
+  public P3<TreeMap<K, V>, Option<V>, TreeMap<K, V>> splitLookup(final K k) {
+    P3<Set<P2<K, Option<V>>>, Option<P2<K, Option<V>>>, Set<P2<K, Option<V>>>> p3 = tree.split(P.p(k, get(k)));
+    Ord<K> o = tree.ord().<K>comap(k2 -> P.p(k2, Option.<V>none()));
+    return P.p(treeMap(o, p3._1()), get(k), treeMap(o, p3._3()));
   }
 
   /**
@@ -233,22 +291,8 @@ public final class TreeMap<K, V> implements Iterable<P2<K, V>> {
   public <W> TreeMap<K, W> map(final F<V, W> f) {
     final F<P2<K, Option<V>>, P2<K, Option<W>>> g = P2.map2_(F1Functions.mapOption(f));
     final F<K, P2<K, Option<V>>> coord = flip(P.<K, Option<V>>p2()).f(Option.<V>none());
-    final Ord<K> o = this.tree.ord().comap(coord);
-    return new TreeMap<K, W>(this.tree.map(TreeMap.<K, Option<W>>ord(o), g));
-  }
-
-  /**
-   * Copy all pairs from x into this map, replacing any existing keys in this map.
-   *
-   * @param TreeMap to copy from
-   * @return A new treemap with all the pairs from x and non-conflicting pairs from this map.
-   */
-  public TreeMap<K, V> setAll(TreeMap<K, V> x) {
-    TreeMap<K, V> result = this;
-    for(P2<K,V> p : x) {
-      result = result.set(p._1(), p._2());
-    }
-    return result;
+    final Ord<K> o = tree.ord().comap(coord);
+    return new TreeMap<K, W>(tree.map(TreeMap.<K, Option<W>>ord(o), g));
   }
 
 }
