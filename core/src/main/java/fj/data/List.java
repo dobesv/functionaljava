@@ -1841,29 +1841,9 @@ public abstract class List<A> implements Iterable<A> {
     }
 
     /**
-     * True if the list is a singleton.  Faster than checking <code>length() == 1</code> for any
-     * list with <code>length() > 1</code>.
+     * True if and only if the list has one element. Runs in constant time.
      */
 	public boolean isSingle() {
 		return isNotEmpty() && tail().isEmpty();
-	}
-
-	/**
-	 * Compare elements of this list to the elements in the other list.  If one
-	 * list is a prefix of the other, the shorter list is considered to be less
-	 * than the longer list.
-	 *
-	 * @param ord Ordering to use for comparison
-	 * @param other Other list to compare with
-	 * @return An Ordering result
-	 */
-	public Ordering compare(Ord<A> ord, List<A> other) {
-		Ordering cmp = Ord.booleanOrd.compare(isEmpty(), other.isEmpty());
-		if(isEmpty() || cmp != Ordering.EQ)
-			return cmp;
-		cmp = ord.compare(head(), other.head());
-		if(cmp != Ordering.EQ)
-			return cmp;
-		return tail().compare(ord, other.tail());
 	}
 }
