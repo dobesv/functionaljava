@@ -117,12 +117,6 @@ subprojects {
       }
     }
 
-	// OSGI version of jar dies if the classes folder isn't pre-created
-    task ensureBuildFolder << {
-      file("build/classes/main").mkdirs()
-    }
-    jar.dependsOn ensureBuildFolder
-
     // Output MANIFEST.MF statically so eclipse can see it for plugin development
     task eclipsePluginManifest(dependsOn: jar) << {
       file("META-INF").mkdirs()
@@ -130,7 +124,6 @@ subprojects {
     }
 
     eclipseProject.dependsOn eclipsePluginManifest
-
 }
 
 
