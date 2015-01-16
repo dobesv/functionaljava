@@ -15,5 +15,4 @@
  *
  * @version %build.number%
  */
-@org.eclipse.jdt.annotation.NonNullByDefault
 package fj.test;

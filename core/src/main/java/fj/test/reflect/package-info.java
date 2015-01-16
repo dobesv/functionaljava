@@ -22,16 +22,15 @@
  * When a property is checked, it uses default configuration values, which may be overridden by
  * annotating the member or the enclosing class with the {@link fj.test.reflect.CheckParams}
  * annotation. The values used are first those specified on the member; or if the annotation does
- * not exist, then the enclosing class (default values otherwise). 
+ * not exist, then the enclosing class (default values otherwise).
  * </p>
  * <p>
  * A property can have a name associated with it by annotating the member with the
  * {@link fj.test.reflect.Name} annotation. The name is a {@link java.lang.String} that is used
  * only for reporting in check results. If the {@link fj.test.reflect.Name} annotation does not
- * appear on a property member, then the field or method name is used by default. 
+ * appear on a property member, then the field or method name is used by default.
  * </p>
  *
  * @version %build.number%
  */
-@org.eclipse.jdt.annotation.NonNullByDefault
 package fj.test.reflect;
