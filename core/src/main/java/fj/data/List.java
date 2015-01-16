@@ -1843,7 +1843,7 @@ public abstract class List<A> implements Iterable<A> {
     /**
      * True if and only if the list has one element. Runs in constant time.
      */
-	public boolean isSingle() {
-		return isNotEmpty() && tail().isEmpty();
-	}
+    public boolean isSingle() {
+        return isNotEmpty() && tail().isEmpty();
+    }
 }
