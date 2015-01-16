@@ -1,7 +1,5 @@
 package fj;
 
-import org.eclipse.jdt.annotation.NonNull;
-
 /**
  * The unit type which has only one value.
  *

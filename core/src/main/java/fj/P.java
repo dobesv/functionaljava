@@ -1,6 +1,5 @@
 package fj;
 
-import org.eclipse.jdt.annotation.NonNull;
 import static fj.Unit.unit;
 
 /**
