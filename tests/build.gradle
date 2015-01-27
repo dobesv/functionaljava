@@ -24,9 +24,3 @@ dependencies {
 
 sourceCompatibility = "1.7"
 
-// OSGI version of jar dies if the classes folder isn't pre-created
-task ensureBuildFolder << {
-  file("build/classes/main").mkdirs()
-}
-jar.dependsOn ensureBuildFolder
-
